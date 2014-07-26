@@ -1,4 +1,10 @@
-#网络设置
+#OpenStack 手动安装手册（Icehouse）
+
+##部署架构
+
+![deployment architecture](/installation/images/deployment_architecture.png)
+
+##网络设置
 
 controller0 
 
