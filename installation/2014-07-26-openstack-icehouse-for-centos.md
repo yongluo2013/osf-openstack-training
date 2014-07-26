@@ -2,7 +2,7 @@
 
 ##部署架构
 
-为了更好的展现OpenStack 分布式部署能力，以及清晰的展现各种逻辑网络部署的区别，本实验采用多节点分开部署的方式。
+为了更好的展现OpenStack 分布式部署能力，以及各种逻辑网络部署的区别，本实验不采用All in one 的部署模式而是采用多节点分开部署的方式，希望读者细细体会。
 
 ![deployment architecture](/installation/images/deployment_architecture.png =600*400)
 
