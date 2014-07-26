@@ -14,7 +14,7 @@
 
 本实验采用Virtualbox Windows 版作为虚拟化平台，模拟相应的物理网络和物理服务器，如果需要部署到真实的物理环境，此步骤可以直接替换为在物理机上相应的配置，其原理相同。
 
-###虚拟网络准备
+###虚拟网络
 
 需要准备3个虚拟网络Net0、Net1和Net2，其对应配置如下。
 
@@ -22,22 +22,24 @@
 		Network name: VirtualBox  host-only Ethernet Adapter#2
 		Purpose: administrator / management network
 		IP block: 10.20.0.0/24
+		DHCP: disable
 		Linux device: eth0
 
 	Net1:
 		Network name: VirtualBox  host-only Ethernet Adapter#3
 		Purpose: public network
+		DHCP: disable
 		IP block: 172.16.0.0/24
 		Linux device: eth1
 
 	Net2：
 		Network name: VirtualBox  host-only Ethernet Adapter#4
 		Purpose: Storage/private network
+		DHCP: disable
 		IP block: 192.168.4.0/24
 		Linux device: eth2
 
-
-###虚拟机准备
+###虚拟机
 
 需要准备3个虚拟机VM0、VM1和VM2，其对应配置如下。
 
@@ -89,11 +91,13 @@
 
 本实验使用Linux 发行版为 CentOS 6.5 x86_64，在安装操作系统过程中，选择的初始安装包为基本安装包就可以了，安装完成系统以后需要额外配置如下YUM 仓库。
 
-EPEL: http://dl.fedoraproject.org/pub/epel/6/x86_64/
+ISO文件下载：http://mirrors.163.com/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-bin-DVD1.iso 
 
-RDO:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
+EPEL源: http://dl.fedoraproject.org/pub/epel/6/x86_64/
 
-执行如此命令即可，安装完成后更新所以包，并重新启动操作系统。
+RDO源:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
+
+自动配置执行如此命令即可，源安装完成后更新所有RPM包，并重新启动操作系统。
 
 
 	yum install -y http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/rdo-release-icehouse-4.noarch.rpm
@@ -251,7 +255,6 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 设置Keystone 用 PKI tokens 
 
 
-
 	keystone-manage pki_setup --keystone-user keystone --keystone-group keystone
 
 
@@ -276,14 +279,12 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 创建管理员和系统服务使用的租户
 
-
 	keystone tenant-create --name=admin --description="Admin Tenant"
 	keystone tenant-create --name=service --description="Service Tenant"
 
 
 
 创建管理员用户
-
 
 	keystone user-create --name=admin --pass=admin --email=admin@example.com
 
@@ -298,7 +299,6 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 
 	keystone user-role-add --user=admin --tenant=admin --role=admin
-
 
 
 为keystone 服务建立 endpoints
@@ -327,13 +327,11 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 先用命令行方式验证
 
-
 	keystone --os-username=admin --os-password=admin --os-auth-url=http://controller0:35357/v2.0 token-get
 	keystone --os-username=admin --os-password=admin --os-tenant-name=admin --os-auth-url=http://controller0:35357/v2.0 token-get
 
 
 让后用设置环境变量认证,保存认证信息
-
 
 
 	vi ~/keystonerc
@@ -346,27 +344,22 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 source 该文件使其生效
 
-
 	source keystonerc
 	keystone token-get
 
 
 Keystone 安装结束。
 
-###Glance 安装于配置 
+###Glance 安装与配置 
 
 安装Glance 的包
-
 
 	yum install openstack-glance python-glanceclient -y
 
 
 初始化Glance数据库
 
-
 	openstack-db --init --service glance --password openstack
-
-
 
 创建glance 用户
 
@@ -378,15 +371,12 @@ Keystone 安装结束。
 
 	keystone user-role-add --user=glance --tenant=service --role=admin
 
-
 创建glance 服务
-
 
 	keystone service-create --name=glance --type=image --description="Glance Image Service"
 
 
 创建keystone 的endpoint 
-
 
 	keystone endpoint-create \
 	--service-id=$(keystone service-list | awk '/ image / {print $2}')  \
@@ -423,7 +413,6 @@ Keystone 安装结束。
 
 启动glance 相关的两个服务
 
-
 	service openstack-glance-api start
 	service openstack-glance-registry start
 	chkconfig openstack-glance-api on
@@ -432,7 +421,6 @@ Keystone 安装结束。
 
 下载最Cirros镜像验证glance 安装是否成功
 
-
 	wget http://cdn.download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img
 	glance image-create --name="CirrOS 0.3.1" --disk-format=qcow2  --container-format=ovf --is-public=true < cirros-0.3.1-x86_64-disk.img
 
@@ -440,10 +428,7 @@ Keystone 安装结束。
 
 查看刚刚上传的image 
 
-
 	glance index
-
-
 
 如果显示相应的image 信息说明安装成功。
 
