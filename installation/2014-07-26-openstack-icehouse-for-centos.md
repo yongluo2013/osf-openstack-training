@@ -4,7 +4,7 @@
 
 为了更好的展现OpenStack 分布式部署能力，以及各种逻辑网络部署的区别，本实验不采用All in one 的部署模式而是采用多节点分开部署的方式，希望读者细细体会。
 
-![deployment architecture](/installation/images/deployment_architecture.png =600*400)
+![deployment architecture](/installation/images/deployment_architecture.png)
 
 ##网络拓扑
 
@@ -18,49 +18,51 @@
 
 需要准备3个虚拟网络Net0、Net1和Net2，其对应配置如下。
 
-Net0:
-	Network name: VirtualBox  host-only Ethernet Adapter#2
-	Purpose: administrator / management network
-	IP block: 10.20.0.0/24
-	Linux device: eth0
 
-Net1:
-	Network name: VirtualBox  host-only Ethernet Adapter#3
-	Purpose: public network
-	IP block: 172.16.0.0/24
-	Linux device: eth1
+	Net0:
+		Network name: VirtualBox  host-only Ethernet Adapter#2
+		Purpose: administrator / management network
+		IP block: 10.20.0.0/24
+		Linux device: eth0
 
-Net2：
-	Network name: VirtualBox  host-only Ethernet Adapter#4
-	Purpose: Storage/private network
-	IP block: 192.168.4.0/24
-	Linux device: eth2
+	Net1:
+		Network name: VirtualBox  host-only Ethernet Adapter#3
+		Purpose: public network
+		IP block: 172.16.0.0/24
+		Linux device: eth1
+
+	Net2：
+		Network name: VirtualBox  host-only Ethernet Adapter#4
+		Purpose: Storage/private network
+		IP block: 192.168.4.0/24
+		Linux device: eth2
 
 
 ###虚拟机准备
 
 需要准备3个虚拟机VM0、VM1和VM2，其对应配置如下。
 
-VM0：
-	Name: controller0
-	vCPU:1
-	Memory :1G
-	Disk:30G
-	Networks: net1
 
-VM1：
-	Name : network0
-	vCPU:1
-	Memory :1G
-	Disk:30G
-	Network:net1,net2,net3
+	VM0：
+		Name: controller0
+		vCPU:1
+		Memory :1G
+		Disk:30G
+		Networks: net1
 
-VM2：
-	Name: compute0
-	vCPU:2
-	Memory :2G
-	Disk:30G
-	Networks:net1,net3
+	VM1：
+		Name : network0
+		vCPU:1
+		Memory :1G
+		Disk:30G
+		Network:net1,net2,net3
+
+	VM2：
+		Name: compute0
+		vCPU:2
+		Memory :2G
+		Disk:30G
+		Networks:net1,net3
 
 
 ###网络设置
@@ -92,8 +94,11 @@ compute1  (optional)
 ###操作系统准备
 
 本实验使用Linux 发行版为 CentOS 6.5 x86_64，在安装操作系统过程中，选择的初始安装包为基本安装包就可以了，安装完成系统以后需要额外配置如下YUM 仓库。
+
 EPEL: http://dl.fedoraproject.org/pub/epel/6/x86_64/
+
 RDO:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
+
 执行如此命令即可，安装完成后更新所以包，并重新启动操作系统。
 
 ```
@@ -103,9 +108,9 @@ yum update -y
 reboot -h 0
 ```
 
-###公共配置（all）
+###公共配置（all nodes）
 
-以下下命令在每一个节点都需要执行。
+以下命令需要在每一个节点都执行。
 
 修改hosts 文件
 
@@ -158,7 +163,7 @@ yum install -y openstack-utils
 ```
 
 
-###基本服务安装与配置（controller0）
+###基本服务安装与配置（controller0 node）
 
 基本服务包括数据库服务和AMQP服务，本实例采用MySQL 和Qpid 作为这两个服务的实现。
 
