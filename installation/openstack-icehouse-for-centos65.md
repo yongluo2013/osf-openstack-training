@@ -4,7 +4,7 @@
 
 为了更好的展现OpenStack各组件分布式部署的特点，以及逻辑网络配置的区别，本实验不采用All in One 的部署模式，而是采用多节点分开部署的方式，方便后续学习研究。
 
-![deployment architecture](/installation/images/deployment_architecture.png)
+![architecture](/installation/images/architecture.png)
 
 ##网络拓扑
 
