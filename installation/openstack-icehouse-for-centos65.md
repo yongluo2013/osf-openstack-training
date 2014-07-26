@@ -2,7 +2,7 @@
 
 ##部署架构
 
-为了更好的展现OpenStack 分布式部署能力，以及各种逻辑网络部署的区别，本实验不采用openstack 各组件All in One 的部署模式而是采用多节点分开部署的方式。
+为了更好的展现OpenStack各组件分布式部署的特点，以及逻辑网络配置的区别，本实验不采用All in One 的部署模式，而是采用多节点分开部署的方式，方便后续学习研究。
 
 ![deployment architecture](/installation/images/deployment_architecture.png)
 
@@ -10,13 +10,15 @@
 
 ![networking](/installation/images/networking.png)
 
-##虚拟环境准备
+##环境准备
 
 本实验采用Virtualbox Windows 版作为虚拟化平台，模拟相应的物理网络和物理服务器，如果需要部署到真实的物理环境，此步骤可以直接替换为在物理机上相应的配置，其原理相同。
 
+Virtualbox 下载地址：https://www.virtualbox.org/wiki/Downloads
+
 ###虚拟网络
 
-需要准备3个虚拟网络Net0、Net1和Net2，其对应配置如下。
+需要新建3个虚拟网络Net0、Net1和Net2，其在virtual box 中对应配置如下。
 
 	Net0:
 		Network name: VirtualBox  host-only Ethernet Adapter#2
@@ -41,7 +43,7 @@
 
 ###虚拟机
 
-需要准备3个虚拟机VM0、VM1和VM2，其对应配置如下。
+需要新建3个虚拟机VM0、VM1和VM2，其对应配置如下。
 
 	VM0：
 		Name: controller0
@@ -89,7 +91,7 @@
 
 ###操作系统准备
 
-本实验使用Linux 发行版为 CentOS 6.5 x86_64，在安装操作系统过程中，选择的初始安装包为基本安装包就可以了，安装完成系统以后需要额外配置如下YUM 仓库。
+本实验使用Linux 发行版 CentOS 6.5 x86_64，在安装操作系统过程中，选择的初始安装包为“基本”安装包，安装完成系统以后还需要额外配置如下YUM 仓库。
 
 ISO文件下载：http://mirrors.163.com/centos/6.5/isos/x86_64/CentOS-6.5-x86_64-bin-DVD1.iso 
 
@@ -97,21 +99,20 @@ EPEL源: http://dl.fedoraproject.org/pub/epel/6/x86_64/
 
 RDO源:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
 
-自动配置执行如此命令即可，源安装完成后更新所有RPM包，并重新启动操作系统。
-
+自动配置执行如此命令即可，源安装完成后更新所有RPM包，由于升级了kernel 需要重新启动操作系统。
 
 	yum install -y http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/rdo-release-icehouse-4.noarch.rpm
 	yum install -y http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
 	yum update -y
 	reboot -h 0
 
+接下来可以开始安装配置啦！
 
 ###公共配置（all nodes）
 
 以下命令需要在每一个节点都执行。
 
 修改hosts 文件
-
 
 	vi /etc/hosts
 
@@ -124,13 +125,11 @@ RDO源:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
 
 禁用 selinux 
 
-
 	vi /etc/selinux/config
 	SELINUX=disabled
 
 
 安装NTP 服务
-
 
 	yum install ntp -y
 	service ntpd start
@@ -147,7 +146,6 @@ RDO源:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
 
 立即同步并检查时间同步配置是否正确
 
-
 	ntpdate -u 10.20.0.10
 	service ntpd restart
 	ntpq -p
@@ -156,9 +154,7 @@ RDO源:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
 安装openstack-utils,方便后续直接可以通过命令行方式修改配置文件
 
 
-
 	yum install -y openstack-utils
-
 
 
 ###基本服务安装与配置（controller0 node）
@@ -167,20 +163,14 @@ RDO源:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
 
 MySQL 服务安装
 
-
 	yum install -y mysql mysql-server MySQL-python
 	service mysqld start
 	chkconfig mysqld on
 
-
 交互式配置MySQL root 密码，设置密码为“openstack”
 
 
-	
-
-
 Qpid 安装消息服务，设置客户端不需要验证使用服务
-
 
 	yum install -y qpid-cpp-server
 
@@ -190,25 +180,18 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 配置修改后，重启Qpid后台服务
 
-
 	service qpidd start
 	chkconfig qpidd on
 
 
 ##控制节点安装（controller0）
 
-
 主机名设置
-
 
 	vi /etc/sysconfig/network
 	HOSTNAME=controller0
 
-
-
 网卡配置
-
-
 
 	vi /etc/sysconfig/network-scripts/ifcfg-eth0
 
@@ -221,17 +204,11 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 	NETMASK=255.255.255.0
 
 
-
 网络配置文件修改完后重启网络服务
-
-
 
 	serice network restart
 
-
-
 ###Keyston 安装与配置
-
 
 安装keystone 包
 
@@ -251,18 +228,15 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 	openstack-config --set /etc/keystone/keystone.conf sql connection mysql://keystone:openstack@controller0/keystone
 
 
-
 设置Keystone 用 PKI tokens 
 
 
 	keystone-manage pki_setup --keystone-user keystone --keystone-group keystone
 
 
-
 初始化Keystone数据库
 
 	openstack-db --init --service keystone --password openstack
-
 
 
 启动keystone 服务
@@ -283,7 +257,6 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 	keystone tenant-create --name=service --description="Service Tenant"
 
 
-
 创建管理员用户
 
 	keystone user-create --name=admin --pass=admin --email=admin@example.com
@@ -292,7 +265,6 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 
 	keystone role-create --name=admin
-
 
 
 为管理员用户分配"管理员"角色
@@ -321,9 +293,7 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 取消先前的Token变量，不然会干扰新建用户的验证。
 
-
 	unset OS_SERVICE_TOKEN OS_SERVICE_ENDPOINT
-
 
 先用命令行方式验证
 
@@ -332,7 +302,6 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 
 让后用设置环境变量认证,保存认证信息
-
 
 	vi ~/keystonerc
 
@@ -385,9 +354,7 @@ Keystone 安装结束。
 	--adminurl=http://controller0:9292
 
 
-
 用openstack util 修改glance api 和 register 配置文件
-
 
 	openstack-config --set /etc/glance/glance-api.conf DEFAULT sql_connection mysql://glance:openstack@controller0/glance
 	openstack-config --set /etc/glance/glance-api.conf keystone_authtoken auth_uri http://controller0:5000
