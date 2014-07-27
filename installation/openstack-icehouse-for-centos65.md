@@ -150,6 +150,19 @@ RDO源:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
 	service ntpd restart
 	ntpq -p
 
+清空防火墙规则
+
+	vi /etc/sysconfig/iptables
+	*filter
+	:INPUT ACCEPT [0:0]
+	:FORWARD ACCEPT [0:0]
+	:OUTPUT ACCEPT [0:0]
+	COMMIT
+
+重启防火墙，查看是否生效
+
+	service iptables restart
+	iptables -L
 
 安装openstack-utils,方便后续直接可以通过命令行方式修改配置文件
 
@@ -238,13 +251,22 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 	chmod -R o-rwx /etc/keystone/ssl
 
 
+为Keystone 建表
+
+	mysql -uroot -popenstack -e "CREATE DATABASE keystone;"
+	mysql -uroot -popenstack -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'openstack';"
+	mysql -uroot -popenstack -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'controller0' IDENTIFIED BY 'openstack';"
+	mysql -uroot -popenstack -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'openstack';"
+
 初始化Keystone数据库
+
+	su -s /bin/sh -c "keystone-manage db_sync" 
+
+也可以直接用openstack-db 工具初始数据库
 
 	openstack-db --init --service keystone --password openstack
 
-
 启动keystone 服务
-
 
 	service openstack-keystone start
 	chkconfig openstack-keystone on
@@ -329,6 +351,10 @@ Keystone 安装结束。
 
 	yum install openstack-glance python-glanceclient -y
 
+配置Glance 连接数据库
+
+	openstack-config --set /etc/glance/glance-api.conf DEFAULT sql_connection mysql://glance:openstack@controller0/glance
+	openstack-config --set /etc/glance/glance-registry.conf DEFAULT sql_connection mysql://glance:openstack@controller0/glance
 
 初始化Glance数据库
 
@@ -360,7 +386,7 @@ Keystone 安装结束。
 
 用openstack util 修改glance api 和 register 配置文件
 
-	openstack-config --set /etc/glance/glance-api.conf DEFAULT sql_connection mysql://glance:openstack@controller0/glance
+
 	openstack-config --set /etc/glance/glance-api.conf keystone_authtoken auth_uri http://controller0:5000
 	openstack-config --set /etc/glance/glance-api.conf keystone_authtoken auth_host controller0
 	openstack-config --set /etc/glance/glance-api.conf keystone_authtoken auth_port 35357
@@ -370,7 +396,6 @@ Keystone 安装结束。
 	openstack-config --set /etc/glance/glance-api.conf keystone_authtoken admin_password glance
 	openstack-config --set /etc/glance/glance-api.conf paste_deploy flavor keystone
 
-	openstack-config --set /etc/glance/glance-registry.conf DEFAULT sql_connection mysql://glance:openstack@controller0/glance
 	openstack-config --set /etc/glance/glance-registry.conf keystone_authtoken auth_uri http://controller0:5000
 	openstack-config --set /etc/glance/glance-registry.conf keystone_authtoken auth_host controller0
 	openstack-config --set /etc/glance/glance-registry.conf keystone_authtoken auth_port 35357
@@ -393,13 +418,13 @@ Keystone 安装结束。
 下载最Cirros镜像验证glance 安装是否成功
 
 	wget http://cdn.download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img
-	glance image-create --name="CirrOS 0.3.1" --disk-format=qcow2  --container-format=ovf --is-public=true < cirros-0.3.1-x86_64-disk.img
+	glance image-create --progress --name="CirrOS 0.3.1" --disk-format=qcow2  --container-format=ovf --is-public=true < cirros-0.3.1-x86_64-disk.img
 
 
 
 查看刚刚上传的image 
 
-	glance index
+	glance  image-list
 
 如果显示相应的image 信息说明安装成功。
 
