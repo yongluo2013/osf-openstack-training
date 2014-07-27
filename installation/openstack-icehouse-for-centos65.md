@@ -234,6 +234,8 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 
 	keystone-manage pki_setup --keystone-user keystone --keystone-group keystone
+	chown -R keystone:keystone /etc/keystone/ssl
+	chmod -R o-rwx /etc/keystone/ssl
 
 
 初始化Keystone数据库
