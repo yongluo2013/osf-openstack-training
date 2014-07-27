@@ -169,6 +169,8 @@ MySQL 服务安装
 
 交互式配置MySQL root 密码，设置密码为“openstack”
 
+	mysql_secure_installation
+
 
 Qpid 安装消息服务，设置客户端不需要验证使用服务
 
@@ -399,6 +401,8 @@ Keystone 安装结束。
 
 如果显示相应的image 信息说明安装成功。
 
+
+yum install -y http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
 
 其他服务安装步骤，待续...
 
