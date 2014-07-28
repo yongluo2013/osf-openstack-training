@@ -429,7 +429,5 @@ Keystone 安装结束。
 如果显示相应的image 信息说明安装成功。
 
 
-yum install -y http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-
 其他服务安装步骤，待续...
 
