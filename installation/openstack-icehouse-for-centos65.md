@@ -653,9 +653,9 @@ keystone 注册endpoint
 	service neutron-server start
 	chkconfig neutron-server on
 	
-##安装network节点
+##安装网路节点
 
-安装network 相关的包
+先安装Neutron 相关的包
 	yum install -y openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
 
 允许ip forward
@@ -721,12 +721,33 @@ keystone 注册endpoint
 	openstack-config --set /etc/neutron/metadata_agent.ini DEFAULT nova_metadata_ip controller0
 	openstack-config --set /etc/neutron/metadata_agent.ini DEFAULT metadata_proxy_shared_secret METADATA_SECRET
 
-service openvswitch start
-chkconfig openvswitch on
+	service openvswitch start
+	chkconfig openvswitch on
 
-ovs-vsctl add-br br-int
-ovs-vsctl add-br br-ex
-ovs-vsctl add-port br-ex eth1
+	ovs-vsctl add-br br-int
+	ovs-vsctl add-br br-ex
+	ovs-vsctl add-port br-ex eth1
+
+修改eth1和br-ext 网络配置
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth1
+	DEVICE=eth1
+	ONBOOT=yes
+	BOOTPROTO=none
+	PROMISC=yes 
+
+	vi /etc/sysconfig/network-scripts/ifcfg-br-ex
+
+	DEVICE=br-ex
+	TYPE=Bridge
+	ONBOOT=no
+	BOOTPROTO=none
+
+重启网络服务
+	service network restart
+
+为br-ext 添加ip
+	sudo ip addr add 172.16.0.20/24 dev br-ex
 
 启动Neutron 服务
 
@@ -741,7 +762,7 @@ ovs-vsctl add-port br-ex eth1
 	chkconfig neutron-metadata-agent on
 
 
-## 安装compute 服务
+## 安装计算节点
 
 安装nova 相关包
 
@@ -878,7 +899,7 @@ ovs-vsctl add-port br-ex eth1
 	| 76f2069f-ba84-4c36-bfc0-3c129d49cbb1 | Metadata agent     | network0 | :-)   | True           |
 	+--------------------------------------+--------------------+----------+-------+----------------+
 
-初始网络
+##创建初始网络
 
 创建外部网络
 	neutron net-create ext-net --shared --router:external=True
