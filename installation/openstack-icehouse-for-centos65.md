@@ -599,6 +599,7 @@ keystone 注册endpoint
 	openstack-config --set /etc/neutron/neutron.conf keystone_authtoken admin_password neutron
 
 配置Neutron qpid
+
 	openstack-config --set /etc/neutron/neutron.conf DEFAULT rpc_backend neutron.openstack.common.rpc.impl_qpid
 	openstack-config --set /etc/neutron/neutron.conf DEFAULT qpid_hostname controller0
 
