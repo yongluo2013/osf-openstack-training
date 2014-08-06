@@ -491,7 +491,9 @@ keystone 注册endpoint
 
 配置nova.conf
 
-	openstack-config --set /etc/nova/nova.conf DEFAULT rpc_backend qpid
+	openstack-config --set /etc/nova/nova.conf DEFAULT debug True
+	openstack-config --set /etc/nova/nova.conf DEFAULT verbose True
+	openstack-config --set /etc/nova/nova.conf DEFAULT rpc_backend qpid 
 	openstack-config --set /etc/nova/nova.conf DEFAULT qpid_hostname controller0
 
 	openstack-config --set /etc/nova/nova.conf DEFAULT my_ip 10.20.0.10
@@ -678,7 +680,7 @@ keystone 注册endpoint
 	NETMASK=255.255.255.0
 
 	vi /etc/sysconfig/network-scripts/ifcfg-eth1
-	DEVICE=eth0
+	DEVICE=eth1
 	TYPE=Ethernet
 	ONBOOT=yes
 	NM_CONTROLLED=yes
@@ -687,7 +689,7 @@ keystone 注册endpoint
 	NETMASK=255.255.255.0
 
 	vi /etc/sysconfig/network-scripts/ifcfg-eth2
-	DEVICE=eth0
+	DEVICE=eth2
 	TYPE=Ethernet
 	ONBOOT=yes
 	NM_CONTROLLED=yes
