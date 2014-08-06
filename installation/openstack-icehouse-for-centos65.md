@@ -142,7 +142,7 @@ RDO源:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
 	vi /etc/ntp.conf
 
 	server 10.20.0.10
-	fudge  192.168.0.10 stratum 10  # LCL is unsynchronized
+	fudge  10.20.0.10 stratum 10  # LCL is unsynchronized
 
 
 立即同步并检查时间同步配置是否正确。(除了controller0以外)
@@ -247,6 +247,7 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 网络配置文件修改完后重启网络服务
 
 	serice network restart
+
 
 ###Keyston 安装与配置
 
@@ -623,8 +624,6 @@ keystone 注册endpoint
 配置Neutron ml2 plugin 用openvswitch
 
 	ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini
-	cp /etc/init.d/neutron-openvswitch-agent /etc/init.d/neutronopenvswitch-agent.orig
-	sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' /etc/init.d/neutron-openvswitch-agent
 
 	openstack-config --set /etc/neutron/neutron.conf DEFAULT core_plugin ml2
 	openstack-config --set /etc/neutron/neutron.conf DEFAULT service_plugins router
@@ -830,7 +829,7 @@ keystone 注册endpoint
 	NETMASK=255.255.255.0
 
 	vi /etc/sysconfig/network-scripts/ifcfg-eth1
-	DEVICE=eth0
+	DEVICE=eth1
 	TYPE=Ethernet
 	ONBOOT=yes
 	NM_CONTROLLED=yes
@@ -839,7 +838,7 @@ keystone 注册endpoint
 	NETMASK=255.255.255.0
 
 	vi /etc/sysconfig/network-scripts/ifcfg-eth2
-	DEVICE=eth0
+	DEVICE=eth2
 	TYPE=Ethernet
 	ONBOOT=yes
 	NM_CONTROLLED=yes
@@ -1038,9 +1037,12 @@ nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 
 ##Dashboard 安装
 
 安装Dashboard 相关包
+
 	yum install memcached python-memcached mod_wsgi openstack-dashboard
 
 配置mencached
+
+	vi /etc/openstack-dashboard/local_settings 
 
 	CACHES = {
 	'default': {
@@ -1051,6 +1053,7 @@ nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 
 
 配置Keystone hostname
 
+	vi /etc/openstack-dashboard/local_settings 
 	OPENSTACK_HOST = "controller0"
 
 启动Dashboard 相关服务
