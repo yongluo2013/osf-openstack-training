@@ -266,7 +266,8 @@ Qpid 安装消息服务，设置客户端不需要验证使用服务
 
 
 	openstack-config --set /etc/keystone/keystone.conf sql connection mysql://keystone:openstack@controller0/keystone
-
+	openstack-config --set /etc/keystone/keystone.conf DEFAULT debug True
+	openstack-config --set /etc/keystone/keystone.conf DEFAULT verbose True
 
 设置Keystone 用 PKI tokens 
 
@@ -378,6 +379,7 @@ Keystone 安装结束。
 
 配置Glance 连接数据库
 
+
 	openstack-config --set /etc/glance/glance-api.conf DEFAULT sql_connection mysql://glance:openstack@controller0/glance
 	openstack-config --set /etc/glance/glance-registry.conf DEFAULT sql_connection mysql://glance:openstack@controller0/glance
 
@@ -411,7 +413,8 @@ Keystone 安装结束。
 
 用openstack util 修改glance api 和 register 配置文件
 
-
+	openstack-config --set /etc/glance/glance-api.conf DEFAULT debug True
+	openstack-config --set /etc/glance/glance-api.conf DEFAULT verbose True
 	openstack-config --set /etc/glance/glance-api.conf keystone_authtoken auth_uri http://controller0:5000
 	openstack-config --set /etc/glance/glance-api.conf keystone_authtoken auth_host controller0
 	openstack-config --set /etc/glance/glance-api.conf keystone_authtoken auth_port 35357
@@ -421,6 +424,8 @@ Keystone 安装结束。
 	openstack-config --set /etc/glance/glance-api.conf keystone_authtoken admin_password glance
 	openstack-config --set /etc/glance/glance-api.conf paste_deploy flavor keystone
 
+	openstack-config --set /etc/glance/glance-registry.conf DEFAULT debug True
+	openstack-config --set /etc/glance/glance-registry.conf DEFAULT verbose True
 	openstack-config --set /etc/glance/glance-registry.conf keystone_authtoken auth_uri http://controller0:5000
 	openstack-config --set /etc/glance/glance-registry.conf keystone_authtoken auth_host controller0
 	openstack-config --set /etc/glance/glance-registry.conf keystone_authtoken auth_port 35357
@@ -656,7 +661,46 @@ keystone 注册endpoint
 	
 ##网路节点安装（network0 node）
 
+主机名设置
+
+	vi /etc/sysconfig/network
+	HOSTNAME=network0
+
+网卡配置
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth0
+	DEVICE=eth0
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=10.20.0.20
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth1
+	DEVICE=eth0
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=172.16.0.20
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth2
+	DEVICE=eth0
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=192.168.4.20
+	NETMASK=255.255.255.0
+
+网络配置文件修改完后重启网络服务
+
+	serice network restart
+
 先安装Neutron 相关的包
+
 	yum install -y openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
 
 允许ip forward
@@ -765,6 +809,46 @@ keystone 注册endpoint
 
 
 ## 计算节点安装（（compute0 node）
+
+
+主机名设置
+
+	vi /etc/sysconfig/network
+	HOSTNAME=compute0
+
+网卡配置
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth0
+	DEVICE=eth0
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=10.20.0.30
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth1
+	DEVICE=eth0
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=172.16.0.30
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth2
+	DEVICE=eth0
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=192.168.4.30
+	NETMASK=255.255.255.0
+
+网络配置文件修改完后重启网络服务
+
+	serice network restart
+
 安装nova 相关包
 
 	yum install -y openstack-nova-compute
@@ -785,7 +869,7 @@ keystone 注册endpoint
 	openstack-config --set /etc/nova/nova.conf DEFAULT rpc_backend qpid
 	openstack-config --set /etc/nova/nova.conf DEFAULT qpid_hostname controller0
 
-	openstack-config --set /etc/nova/nova.conf DEFAULT my_ip 192.168.4.30
+	openstack-config --set /etc/nova/nova.conf DEFAULT my_ip 10.20.0.30
 	openstack-config --set /etc/nova/nova.conf DEFAULT vnc_enabled True
 	openstack-config --set /etc/nova/nova.conf DEFAULT vncserver_listen 0.0.0.0
 	openstack-config --set /etc/nova/nova.conf DEFAULT vncserver_proxyclient_address 10.20.0.10
@@ -836,6 +920,7 @@ keystone 注册endpoint
 	openstack-config --set /etc/neutron/neutron.conf keystone_authtoken admin_password neutron
 
 配置Neutron qpid
+
 	openstack-config --set /etc/neutron/neutron.conf DEFAULT rpc_backend neutron.openstack.common.rpc.impl_qpid
 	openstack-config --set /etc/neutron/neutron.conf DEFAULT qpid_hostname controller0
 
@@ -903,6 +988,7 @@ keystone 注册endpoint
 ##创建初始网络
 
 创建外部网络
+
 	neutron net-create ext-net --shared --router:external=True
 
 为外部网络添加subnet
@@ -914,6 +1000,7 @@ keystone 注册endpoint
 创建住户网络
 
 首先创建demo用户、租户已经分配角色关系
+
 	keystone user-create --name=demo --pass=demo --email=demo@example.com
 	keystone tenant-create --name=demo --description="Demo Tenant"
 	keystone user-role-add --user=demo --role=_member_ --tenant=demo
@@ -923,6 +1010,7 @@ keystone 注册endpoint
 	neutron net-create demo-net
 
 为租户网络添加subnet
+
 	neutron subnet-create demo-net --name demo-subnet --gateway 192.168.1.1 192.168.1.0/24
 
 
