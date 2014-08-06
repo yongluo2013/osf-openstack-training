@@ -653,7 +653,7 @@ keystone 注册endpoint
 	service neutron-server start
 	chkconfig neutron-server on
 	
-##安装网路节点
+##网路节点安装（network0 node）
 
 先安装Neutron 相关的包
 	yum install -y openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch
@@ -747,6 +747,7 @@ keystone 注册endpoint
 	service network restart
 
 为br-ext 添加ip
+	ip link set br-ex up
 	sudo ip addr add 172.16.0.20/24 dev br-ex
 
 启动Neutron 服务
@@ -762,8 +763,7 @@ keystone 注册endpoint
 	chkconfig neutron-metadata-agent on
 
 
-## 安装计算节点
-
+## 计算节点安装（（compute0 node）
 安装nova 相关包
 
 	yum install -y openstack-nova-compute
@@ -943,12 +943,8 @@ keystone 注册endpoint
 nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 }') --nic net-id=$(neutron net-list|awk '/ demo-net / { print $2 }') --security-group default demo-instance1
 
 
-sudo ip addr add 172.16.0.20/24 dev br-ex;service network restart
 
-sudo ip link set br-ex up
-
-
-安装Dashboard
+##Dashboard 安装
 
 安装Dashboard 相关包
 	yum install memcached python-memcached mod_wsgi openstack-dashboard
