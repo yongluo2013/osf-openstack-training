@@ -506,11 +506,11 @@ keystone 注册endpoint
 
 添加api-paste.ini 的 Keystone认证信息
 
-openstack-config --set /etc/nova/api-paste.ini filter:authtoken paste.filter_factory keystoneclient.middleware.auth_token:filter_factory
-openstack-config --set /etc/nova/api-paste.ini filter:authtoken auth_host controller0
-openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
-openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
-openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password nova
+	openstack-config --set /etc/nova/api-paste.ini filter:authtoken paste.filter_factory keystoneclient.middleware.auth_token:filter_factory
+	openstack-config --set /etc/nova/api-paste.ini filter:authtoken auth_host controller0
+	openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
+	openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
+	openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password nova
 
 启动服务
 
