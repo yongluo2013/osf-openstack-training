@@ -1,0 +1,49 @@
+<domain type="qemu">
+  <uuid>23469de0-a3a0-4214-a60e-a45322bcc370</uuid>
+  <name>instance2</name>
+  <memory>524288</memory>
+  <vcpu>1</vcpu>
+  <sysinfo type="smbios">
+    <system>
+      <entry name="manufacturer">Red Hat Inc.</entry>
+      <entry name="product">OpenStack Nova</entry>
+      <entry name="version">2014.1.1-3.el6</entry>
+      <entry name="serial">b8d4ec5f-acd6-7111-c69b-600912a079bb</entry>
+      <entry name="uuid">23469de0-a3a0-4214-a60e-a45322bcc370</entry>
+    </system>
+  </sysinfo>
+  <os>
+    <type>hvm</type>
+    <boot dev="hd"/>
+    <smbios mode="sysinfo"/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <clock offset="utc"/>
+  <cpu mode="host-model" match="exact"/>
+  <devices>
+    <disk type="file" device="disk">
+      <driver name="qemu" type="qcow2" cache="none"/>
+      <source file="/var/tmp/gre/instance2.img"/>
+      <target bus="virtio" dev="vda"/>
+    </disk>
+	<interface type='bridge'>
+      <source bridge='qbr002'/>
+      <target dev='tap002'/>
+      <model type='virtio'/>
+      <driver name='qemu'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
+    </interface>
+    <serial type="file">
+      <source path="/var/tmp/gre/instance2.log"/>
+    </serial>
+    <serial type="pty"/>
+    <input type="tablet" bus="usb"/>
+    <graphics type="vnc" autoport="yes" keymap="en-us" listen="0.0.0.0"/>
+    <video>
+      <model type="cirrus"/>
+    </video>
+  </devices>
+</domain>
