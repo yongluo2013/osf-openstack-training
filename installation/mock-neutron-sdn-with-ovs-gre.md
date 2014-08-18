@@ -340,8 +340,11 @@
 检查网络，配置后是否连通
 
 	ping 172.16.0.201
-	ping 172.16.0.202
+	
 
+添加一个namespace，router01 用于路由和floating ip 分配
+
+	ip netns add router01
 
 在br-int添加一个接口，作为私有网络192.168.1.0/24的网关
 
@@ -352,10 +355,6 @@
 	ip netns exec router01 ip addr add 192.168.1.1/24 dev qr01
 	ip netns exec router01 ip link set qr01 up
 	ip netns exec router01 ip link set lo up
-
-添加一个namespace，router01 用于路由和floating ip 分配
-
-	ip netns add router01
 
 在br-ex中添加一个接口，用于私网192.168.1.0/24设置下一跳地址
 
@@ -369,13 +368,10 @@
 
 	ip netns exec router01 ip addr add 172.16.0.101/32 dev qg01 
 
-	ip netns exec router01 route add default gw 172.16.0.1 qg01
-
 	ip netns exec router01  iptables -t nat -A OUTPUT -d 172.16.0.101/32  -j DNAT --to-destination 192.168.1.11
 	ip netns exec router01  iptables -t nat -A PREROUTING -d 172.16.0.101/32 -j DNAT --to-destination 192.168.1.11
 	ip netns exec router01  iptables -t nat -A POSTROUTING -s 192.168.1.11/32 -j SNAT --to-source 172.16.0.101
 	ip netns exec router01  iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -j SNAT --to-source 172.16.0.100
-
 
 测试floating ip
 
