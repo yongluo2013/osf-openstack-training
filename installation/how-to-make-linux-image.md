@@ -16,6 +16,23 @@
 
 
 
+###创建网络vnet4
+
+	virtsh net-define vnet4.xml 
+
+####创建磁盘
+
+	qemu-img create -f qcow2 image-test.img 10G
+
+####创建虚拟机
+
+	virt-install --name image-test  --hvm  --ram 2048  --vcpus 2  --disk path=/var/tmp/image-test.img,size=10,bus=virtio,format=qcow2 --network network:default --accelerate --vnc --vncport=5908  --cdrom /var/tmp/CentOS-6.5-x86_64-bin-DVD1.iso  --boot cdrom
+
+###VNC viewer 访问console
+	vncviewer 5922
+
+
+
 ###删除硬编码网卡信息
 ###删除所有防火墙规则
 ###默认启动SSH服务

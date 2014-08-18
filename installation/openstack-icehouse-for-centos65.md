@@ -711,6 +711,10 @@ keystone 注册endpoint
 	net.ipv4.conf.all.rp_filter=0
 	net.ipv4.conf.default.rp_filter=0
 
+立即生效
+
+	sysctl -p
+
 配置Neutron keysone 认证
 
 	openstack-config --set /etc/neutron/neutron.conf DEFAULT auth_strategy keystone
