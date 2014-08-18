@@ -314,11 +314,11 @@
 
 	ovs-vsctl add-br br-ex
 
-重新配置eth2 和 br-ex
+重新配置eth1 和 br-ex
 
-	cat /etc/sysconfig/network-scripts/ifcfg-eth2
+	cat /etc/sysconfig/network-scripts/ifcfg-eth1
 
-	DEVICE=eth2
+	DEVICE=eth1
 	ONBOOT=yes
 	BOOTPROTO=none
 	PROMISC=yes
@@ -335,12 +335,12 @@
 
 重启启动网络服务
 
-	ovs-vsctl add-port br-ex eth2 && service network restart
+	ovs-vsctl add-port br-ex eth1 && service network restart
 
 检查网络，配置后是否连通
 
-	ping 127.16.0.201
-	ping 127.16.0.202
+	ping 172.16.0.201
+	ping 172.16.0.202
 
 
 在br-int添加一个接口，作为私有网络192.168.1.0/24的网关
