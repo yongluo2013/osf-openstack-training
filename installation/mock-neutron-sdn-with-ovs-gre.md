@@ -31,14 +31,14 @@
 需要新建2个虚拟机VM1和VM2，其对应配置如下。
 
 	VM1：
-		Name : network0
+		Name : network1
 		vCPU:1
 		Memory :1G
 		Disk:30G
 		Network:net1,net2,net3
 
 	VM2：
-		Name: compute0
+		Name: compute1
 		vCPU:1
 		Memory :1G
 		Disk:30G
@@ -47,18 +47,18 @@
 
 ###Linux interface设置
 
-	network0
+	network1
 	     eth0:10.20.0.201   (management network)
 	     eht1:172.16.0.201   (public/external network)
 	     eht2:192.168.4.201  (private network，gre tunning)
 
-	compute0
+	compute1
 	     eth0:10.20.0.202   (management network)
 	     eht1:(disabled)
 	     eht2:192.168.4.202  (private network，gre tunning)
 
 
-##模拟安装网络节点(Network0)
+##模拟安装网络节点(Network1)
 
 模拟Network 节点相关实现，比如L3、dhcp-agent实现，为了模拟多节点网络情况，这里Network同时也模拟一个计算节点，模拟M2 openvswitch 实现，上面运行instance1。
 
@@ -105,6 +105,17 @@
 	virsh net-autostart --disable default
 	virsh net-undefine default
 
+设置允许ipforwarding
+
+	vi /etc/sysctl.conf 
+	net.ipv4.ip_forward=1
+	net.ipv4.conf.all.rp_filter=0
+	net.ipv4.conf.default.rp_filter=0
+
+立即生效
+
+	sysctl -p
+
 启动openvswitch
 
 	service openvswitch start
@@ -126,7 +137,7 @@
 	      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
 	</interface>
 
-可以参考附件instance1.xml创建
+可以参考附件./gre/instance1.xml创建
 
 	cp ~/gre/ /var/tmp/
 	cd /var/tmp/gre
@@ -136,7 +147,7 @@
 	virsh vncdesplay instance1
 	vncviewer :0
 
-启动console 以后,登录添加ip得知 192.168.1.11
+启动console 以后,登录添加ip 地址 192.168.1.11
 
 	ip addr add 192.168.1.11/24 dev eth0
 
@@ -155,11 +166,11 @@
 	ip link set qvb01 up
 	ip link set qvo01 up
 
-查看现在network0 上的 br-int
+查看现在network1上的 br-int
 
 	ovs-vsctl show
 
-##模拟安装计算节点(compute0)
+##模拟安装计算节点(compute1)
 
 ##网络接口配置
 
@@ -204,6 +215,17 @@
 	virsh net-autostart --disable default
 	virsh net-undefine default
 
+设置允许ipforwarding
+
+	vi /etc/sysctl.conf 
+	net.ipv4.ip_forward=1
+	net.ipv4.conf.all.rp_filter=0
+	net.ipv4.conf.default.rp_filter=0
+
+立即生效
+
+	sysctl -p
+
 启动openvswitch
 
 	service openvswitch start
@@ -225,7 +247,7 @@
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
 </interface>
 
-上gre目录到compute0 节点，可以参考附件instance2.xml创建
+上gre目录到compute1 节点，可以参考附件./gre/instance2.xml创建
 
 	cp ~/gre/ /var/tmp/
 	cd /var/tmp/gre
@@ -240,7 +262,12 @@
 	ip addr add 192.168.1.12/24 dev eth0
 
 
-创建一个veth peer，连接qbr02和br-ini
+创建一个内部bridge br-int， 模拟 OpenStack integrated bridge
+
+	ovs-vsctl add-br br-int
+	ovs-vsctl add-port br-int gre0 -- set interface gre0 type=gre options:remote_ip=192.168.4.201
+
+创建一个veth peer，连接Linux Bridge 'qbr02' 和  OpenvSwich Bridge 'br-ini'
 
 	ip link add qvo02 type veth peer name qvb02
 	brctl addif qbr02 qvb02
@@ -249,12 +276,8 @@
 	ip link set qvb02 up
 	ip link set qvo02 up
 
-创建一个内部bridge br-int， 模拟 OpenStack integrated bridge
 
-	ovs-vsctl add-br br-int
-	ovs-vsctl add-port br-int gre0 -- set interface gre0 type=gre options:remote_ip=192.168.4.201
-
-查看现在network0 上的 br-int
+查看现在network1 上的 br-int
 
 	ovs-vsctl show
 
@@ -281,11 +304,11 @@
 
 检查网络是否连通，在namespace 访问instance1 和 instance2
 
-	ip netns exec dhcp01 ping 192.168.1.10
+	ip netns exec dhcp01 ping 192.168.1.12
 	ip netns exec dhcp01 ping 192.168.1.11
 
 
-##实现基于namespace 和iptables 实现L3 router 功能，已经floating ip 访问instance1
+##实现基于namespace 和iptables 实现L3 router 功能，以及floating ip 访问instance1
 
 添加一个新的bridge br-ex用于floating IP映射
 
