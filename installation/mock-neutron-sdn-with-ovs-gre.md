@@ -212,14 +212,14 @@
 
 创建一个linux bridge
 
-	brctl addbr qbr002
-	ip link set qbr002 up
+	brctl addbr qbr02
+	ip link set qbr02 up
 
-创建一个vm，并连接到qbr002
+创建一个vm，并连接到qbr02
 
 <interface type='bridge'>
-      <source bridge='qbr002'/>
-      <target dev='tap002'/>
+      <source bridge='qbr02'/>
+      <target dev='tap02'/>
       <model type='virtio'/>
       <driver name='qemu'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
@@ -240,14 +240,14 @@
 	ip addr add 192.168.1.12/24 dev eth0
 
 
-创建一个veth peer，连接qbr002和br-ini
+创建一个veth peer，连接qbr02和br-ini
 
-	ip link add qvo002 type veth peer name qvb002
-	brctl addif qbr002 qvb002
-	ovs-vsctl add-port br-int qvo002
-	ovs-vsctl set port qvo002 tag=100
-	ip link set qvb002 up
-	ip link set qvo002 up
+	ip link add qvo02 type veth peer name qvb02
+	brctl addif qbr02 qvb02
+	ovs-vsctl add-port br-int qvo02
+	ovs-vsctl set port qvo02 tag=100
+	ip link set qvb02 up
+	ip link set qvo02 up
 
 创建一个内部bridge br-int， 模拟 OpenStack integrated bridge
 
