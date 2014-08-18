@@ -113,14 +113,14 @@
 
 创建一个linux bridge
 
-	brctl addbr qbr001
-	ip link set qbr001 up
+	brctl addbr qbr01
+	ip link set qbr01 up
 
-创建一个instance，并连接到qbr001 Bridge，网络接口部分配置如下
+创建一个instance，并连接到qbr01 Bridge，网络接口部分配置如下
 
 	<interface type='bridge'>
-	      <source bridge='qbr001'/>
-	      <target dev='tap001'/>
+	      <source bridge='qbr01'/>
+	      <target dev='tap01'/>
 	      <model type='virtio'/>
 	      <driver name='qemu'/>
 	      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
@@ -146,14 +146,14 @@
 	ovs-vsctl add-br br-int
 	ovs-vsctl add-port br-int gre0 -- set interface gre0 type=gre options:remote_ip=192.168.4.202
 
-创建一个veth peer，连接Linux Bridge 'qbr001' 和  OpenvSwich Bridge 'br-ini'
+创建一个veth peer，连接Linux Bridge 'qbr01' 和  OpenvSwich Bridge 'br-ini'
 
-	ip link add qvo001 type veth peer name qvb001
-	brctl addif qbr001 qvb001
-	ovs-vsctl add-port br-int qvo001
-	ovs-vsctl set port qvo001 tag=100
-	ip link set qvb001 up
-	ip link set qvo001 up
+	ip link add qvo01 type veth peer name qvb01
+	brctl addif qbr01 qvb01
+	ovs-vsctl add-port br-int qvo01
+	ovs-vsctl set port qvo01 tag=100
+	ip link set qvb01 up
+	ip link set qvo01 up
 
 查看现在network0 上的 br-int
 
@@ -266,23 +266,23 @@
 
 ##实现基于namespace 实现租户私有网络互访
 
-添加一个namespace，dhcp001用于隔离租户网络。
+添加一个namespace，dhcp01用于隔离租户网络。
 
-	ip netns add dhcp001
+	ip netns add dhcp01
 
-为私有网络192.168.1.0/24 ，在命名空间dhcp001 中 创建dhcp 服务
+为私有网络192.168.1.0/24 ，在命名空间dhcp01 中 创建dhcp 服务
 
-	ovs-vsctl add-port br-int tapdhcp001 -- set interface tapdhcp001 type=internal
-	ovs-vsctl set port tapdhcp001 tag=100
+	ovs-vsctl add-port br-int tapdhcp01 -- set interface tapdhcp01 type=internal
+	ovs-vsctl set port tapdhcp01 tag=100
 
-	ip link set tapdhcp001 netns dhcp001
-	ip netns exec dhcp001 ip addr add 192.168.1.2/24 dev tapdhcp001
-	ip netns exec dhcp001 ip link set tapdhcp001 up
+	ip link set tapdhcp01 netns dhcp01
+	ip netns exec dhcp01 ip addr add 192.168.1.2/24 dev tapdhcp01
+	ip netns exec dhcp01 ip link set tapdhcp01 up
 
 检查网络是否连通，在namespace 访问instance1 和 instance2
 
-	ip netns exec dhcp001 ping 192.168.1.10
-	ip netns exec dhcp001 ping 192.168.1.11
+	ip netns exec dhcp01 ping 192.168.1.10
+	ip netns exec dhcp01 ping 192.168.1.11
 
 
 ##实现基于namespace 和iptables 实现L3 router 功能，已经floating ip 访问instance1
@@ -322,36 +322,36 @@
 
 在br-int添加一个接口，作为私有网络192.168.1.0/24的网关
 
-	ovs-vsctl add-port br-int qr001 -- set interface qr001 type=internal
-	ovs-vsctl set port qr001 tag=100
+	ovs-vsctl add-port br-int qr01 -- set interface qr01 type=internal
+	ovs-vsctl set port qr01 tag=100
 
-	ip link set qr001 netns router001
-	ip netns exec router001 ip addr add 192.168.1.1/24 dev qr001
-	ip netns exec router001 ip link set qr001 up
-	ip netns exec router001 ip link set lo up
+	ip link set qr01 netns router01
+	ip netns exec router01 ip addr add 192.168.1.1/24 dev qr01
+	ip netns exec router01 ip link set qr01 up
+	ip netns exec router01 ip link set lo up
 
-添加一个namespace，router001 用于路由和floating ip 分配
+添加一个namespace，router01 用于路由和floating ip 分配
 
-	ip netns add router001
+	ip netns add router01
 
 在br-ex中添加一个接口，用于私网192.168.1.0/24设置下一跳地址
 
-	ovs-vsctl add-port br-ex qg001 -- set interface qg001  type=internal
-	ip link set qg001  netns router001
-	ip netns exec router001 ip addr add 172.16.0.100/24 dev qg001 
-	ip netns exec router001 ip link set qg001 up
-	ip netns exec router001 ip link set lo up
+	ovs-vsctl add-port br-ex qg01 -- set interface qg01  type=internal
+	ip link set qg01  netns router01
+	ip netns exec router01 ip addr add 172.16.0.100/24 dev qg01 
+	ip netns exec router01 ip link set qg01 up
+	ip netns exec router01 ip link set lo up
 
 模拟为instance1 192.168.1.11 分配floating ip，172.16.0.101
 
-	ip netns exec router001 ip addr add 172.16.0.101/32 dev qg001 
+	ip netns exec router01 ip addr add 172.16.0.101/32 dev qg01 
 
-	ip netns exec router001 route add default gw 172.16.0.1 qg001
+	ip netns exec router01 route add default gw 172.16.0.1 qg01
 
-	ip netns exec router001  iptables -t nat -A OUTPUT -d 172.16.0.101/32  -j DNAT --to-destination 192.168.1.11
-	ip netns exec router001  iptables -t nat -A PREROUTING -d 172.16.0.101/32 -j DNAT --to-destination 192.168.1.11
-	ip netns exec router001  iptables -t nat -A POSTROUTING -s 192.168.1.11/32 -j SNAT --to-source 172.16.0.101
-	ip netns exec router001  iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -j SNAT --to-source 172.16.0.100
+	ip netns exec router01  iptables -t nat -A OUTPUT -d 172.16.0.101/32  -j DNAT --to-destination 192.168.1.11
+	ip netns exec router01  iptables -t nat -A PREROUTING -d 172.16.0.101/32 -j DNAT --to-destination 192.168.1.11
+	ip netns exec router01  iptables -t nat -A POSTROUTING -s 192.168.1.11/32 -j SNAT --to-source 172.16.0.101
+	ip netns exec router01  iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -j SNAT --to-source 172.16.0.100
 
 
 测试floating ip
