@@ -1,5 +1,10 @@
 #OpenStack 手动安装手册（Icehouse）
 
+声明：本博客欢迎转发，但请保留原作者信息!      
+作者：[罗勇] 云计算工程师、敏捷开发实践者    
+博客：[http://yongluo2013.github.io/](http://yongluo2013.github.io/)    
+微博：[http://weibo.com/u/1704250760/](http://weibo.com/u/1704250760/)  
+
 ##部署架构
 
 为了更好的展现OpenStack各组件分布式部署的特点，以及逻辑网络配置的区别，本实验不采用All in One 的部署模式，而是采用多节点分开部署的方式，方便后续学习研究。

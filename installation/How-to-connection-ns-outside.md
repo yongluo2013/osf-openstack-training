@@ -1,4 +1,17 @@
-##网络接口配置
+#网络知识盘点实例
+
+声明：本博客欢迎转发，但请保留原作者信息!      
+作者：[罗勇] 云计算工程师、敏捷开发实践者    
+博客：[http://yongluo2013.github.io/](http://yongluo2013.github.io/)    
+微博：[http://weibo.com/u/1704250760/](http://weibo.com/u/1704250760/)  
+
+##练习介绍
+
+熟悉Neutron 部分需要用到的几个基本的网络知识点，通过练习体会原理及方法。
+
+##环境配置
+
+网络接口
 
 	vi /etc/sysconfig/network-scripts/ifcfg-eth0
 	DEVICE=eth0
@@ -31,7 +44,6 @@
 
 	service network restart
 
-
 ##练习1
 
 创建一个network namespace foo
@@ -61,19 +73,19 @@
 
 为root namespace 中的tap-root添加ip
 
- ip addr add 192.168.10.1/24 dev tap-root
- ip netns exec foo ip link set tap-root up
+	 ip addr add 192.168.10.1/24 dev tap-root
+	 ip netns exec foo ip link set tap-root up
 
 
 查看 root 空间中的网卡信息
 
- ip a
+ 	ip a
 
  检查是否网络连通
 
- ping 192.168.10.2
+	 ping 192.168.10.2
 
- ip netns exec foo ping 192.168.10.1
+	 ip netns exec foo ping 192.168.10.1
 
 
  ##练习2

@@ -1,7 +1,7 @@
 
-##课程说明
+##项目说明
 
-本项目主要用于开源力量《OpenStack应用实战解析及开发入门》 在线培训同步课程只用，内容可以随意转载，但是请保留源作者信息。
+本项目主要用于开源力量《OpenStack应用实战解析及开发入门》 在线培训同步课程使用用，欢迎个人随意转载，但是请保留源作者版权信息。
 
 ##目录说明
 
@@ -10,6 +10,47 @@ code/ 上课用到的演示代码
 installation/ 手动安装文档等
 
 ##教学内容
+
+###初识OpenStack
+
+* OpensSack 现场演示
+* 详细介绍OpenStack涉及到的概念，并结合实际应用场景介绍相关概念的应用。
+* 基本概念：Tenant、User和Role
+* 高级概念：Region、AZ、Cell、Host Aggregate
+* 如何结合实际应用场景来对应OpenStack中的概念
+
+###手动OpenStack安装配置
+
+* Openstack部署架构讲解（3个VM）
+* Keystone搭建
+* Glance搭建
+* Neutron搭建
+* Nova搭建
+* Dashboard 搭建
+* Swift搭建
+* Cinder搭建
+
+##OpenStack 自动部署
+
+* Openstack 自动化部署方式比较
+* DevStack自动化部署原理，并演示单节点和多节点自动化安装部署 
+* Fuel OpenStack多节点自动化部署介绍
+* PackStack多节点自动化部署介绍
+* Puppet 方式部署介绍
+
+###OpenStack认证组件Keystone 
+
+* Keystone介绍和基本概念
+* Keystone架构
+* Keystone处理流程
+* Keystone实验
+
+###OpenStack镜像组件Glance
+
+* Glance介绍和基本概念
+* Glance架构
+* Glance实验
+* 镜像的制作、修改、转换
 
 ###OpenStack对象存储Swift和块存储Cinder
 

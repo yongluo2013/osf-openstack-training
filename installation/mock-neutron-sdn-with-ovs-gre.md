@@ -1,6 +1,10 @@
 
 ##安装架构介绍
 
+声明：本博客欢迎转发，但请保留原作者信息!      
+作者：[罗勇] 云计算工程师、敏捷开发实践者    
+博客：[http://yongluo2013.github.io/](http://yongluo2013.github.io/)    
+微博：[http://weibo.com/u/1704250760/](http://weibo.com/u/1704250760/)  
 
 本文旨在通过自己搭建类似neuron （openvswitch + gre） 实现SDN 的环境，学习了解其工作原理，模拟关键原理，比如同一租户自定义网络 instance 互通，instance floating ip 分配等相关内容。
 
