@@ -1,6 +1,13 @@
 
 ##安装架构介绍
 
+
+本文旨在通过自己搭建类似neuron （openvswitch + gre） 实现SDN 的环境，学习了解其工作原理，模拟关键原理，比如同一租户自定义网络 instance 互通，instance floating ip 分配等相关内容。
+
+
+![mock neutron architecture](/installation/images/mock-neutron-arch.png)
+
+
 ###虚拟网络
 
 需要新建3个虚拟网络Net0、Net1和Net2，其在virtual box 中对应配置如下。

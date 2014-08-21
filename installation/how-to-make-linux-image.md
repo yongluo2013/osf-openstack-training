@@ -14,8 +14,6 @@
 ###OS安装
 
 
-
-
 ###创建网络vnet4
 
 	virtsh net-define vnet4.xml 
