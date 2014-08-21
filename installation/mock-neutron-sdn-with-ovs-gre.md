@@ -300,7 +300,7 @@
 	ping 192.168.1.11
 
 
-##实现基于namespace 实现租户私有网络互访
+##通过 Network Namespace 实现租户私有网络互访
 
 添加一个namespace，dhcp01用于隔离租户网络。
 
@@ -321,7 +321,7 @@
 	ip netns exec dhcp01 ping 192.168.1.11
 
 
-##实现基于namespace 和iptables 实现L3 router 功能，以及floating ip 访问instance1
+##通过 Network Namespace 和Iptables 实现L3 router
 
 添加一个新的bridge br-ex用于floating IP映射
 
@@ -377,7 +377,9 @@
 	ip netns exec router01 ip link set qg01 up
 	ip netns exec router01 ip link set lo up
 
-模拟为instance1 192.168.1.11 分配floating ip，172.16.0.101
+## 模拟分配floating ip 访问instance1
+
+为instance1 192.168.1.11 分配floating ip，172.16.0.101
 
 	ip netns exec router01 ip addr add 172.16.0.101/32 dev qg01 
 
