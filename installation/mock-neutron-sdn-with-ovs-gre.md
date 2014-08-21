@@ -8,7 +8,7 @@
 
 ##安装架构介绍
 
-本文旨在通过自己搭建类似neuron （openvswitch + gre） 实现SDN 的环境，学习了解其工作原理，模拟关键原理，比如同一租户自定义网络 instance 互通，instance floating ip 分配等相关内容。
+本文旨在通过自己搭建类似neutron （openvswitch + gre） 实现SDN 的环境，学习了解其工作原理，模拟核心原理，比如：同一租户自定义网络 instance 互通，手动为instance 分配 floating ip 等相关内容。
 
 
 ![mock neutron architecture](/installation/images/mock-neutron-arch.png)
