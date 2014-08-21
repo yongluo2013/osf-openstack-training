@@ -30,8 +30,8 @@
       <target bus="virtio" dev="vda"/>
     </disk>
 	<interface type='bridge'>
-      <source bridge='qbr001'/>
-      <target dev='tap001'/>
+      <source bridge='qbr01'/>
+      <target dev='tap01'/>
       <model type='virtio'/>
       <driver name='qemu'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
