@@ -100,7 +100,7 @@ installation/ 手动安装文档等
 * 公有云经验分享
 * 私有云经验分享
 
-###OpenStack云平台与其它几种云平台的比较（OpenStack, CloudStack, OpenNebula，VMWare）
+###OpenStack云平台与其它几种云平台的比较
 
 * 几种主流的开源云平台技术比较
 * 几种主流云平台的生态系统比较
