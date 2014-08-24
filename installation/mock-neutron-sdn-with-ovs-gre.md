@@ -163,6 +163,7 @@
 启动console 以后,登录添加ip 地址 192.168.1.11
 
 	ip addr add 192.168.1.11/24 dev eth0
+	route add default gw 192.168.2.1
 
 
 创建一个内部bridge br-int， 模拟 OpenStack integrated bridge
@@ -273,6 +274,7 @@
 启动console 以后,登录添加ip得知 192.168.1.12
 
 	ip addr add 192.168.1.12/24 dev eth0
+	route add default gw 192.168.1.1 
 
 
 创建一个内部bridge br-int， 模拟 OpenStack integrated bridge
