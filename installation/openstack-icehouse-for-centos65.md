@@ -1097,7 +1097,11 @@ nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 
 	mysql -uroot -popenstack -e "GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'%' IDENTIFIED BY 'openstack';"
 	mysql -uroot -popenstack -e "GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'controller0' IDENTIFIED BY 'openstack';"
 
-su -s /bin/sh -c "cinder-manage db sync" cinder
+	su -s /bin/sh -c "cinder-manage db sync" cinder
+
+或者用openstack-db 工具初始化数据库
+
+	openstack-db --init --service keystone --password openstack
 
 在Keystone中创建cinder 系统用户
 
@@ -1109,6 +1113,7 @@ su -s /bin/sh -c "cinder-manage db sync" cinder
 	keystone service-create --name=cinder --type=volume --description="OpenStack Block Storage"
 
 创建一个 cinder 的 endpoint
+
 	keystone endpoint-create \
 	--service-id=$(keystone service-list | awk '/ volume / {print $2}') \
 	--publicurl=http://controller0:8776/v1/%\(tenant_id\)s \
@@ -1116,9 +1121,11 @@ su -s /bin/sh -c "cinder-manage db sync" cinder
 	--adminurl=http://controller0:8776/v1/%\(tenant_id\)s
 
 在Keystone注册一个cinderv2 的 service
+
 	keystone service-create --name=cinderv2 --type=volumev2 --description="OpenStack Block Storage v2"
 
 创建一个 cinderv2 的 endpoint
+
 	keystone endpoint-create \
 	--service-id=$(keystone service-list | awk '/ volumev2 / {print $2}') \
 	--publicurl=http://controller0:8776/v2/%\(tenant_id\)s \
@@ -1198,8 +1205,8 @@ su -s /bin/sh -c "cinder-manage db sync" cinder
 
 	pvcreate /dev/vdb
 	vgcreate cinder-volumes /dev/vdb
-Add a filter entry to the devices section in the /etc/lvm/lvm.conf file to keep
-LVM from scanning devices used by virtual machines
+
+Add a filter entry to the devices section in the /etc/lvm/lvm.conf file to keep LVM from scanning devices used by virtual machines
 
 添加一个过滤器保证 虚拟机能扫描到LVM
 
