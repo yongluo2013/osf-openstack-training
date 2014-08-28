@@ -1077,5 +1077,174 @@ nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 
 	http://10.20.0.10/dashboard
 
 
+##Cinder 安装
+
+###Cinder controller 安装
+
+先在controller0 节点安装 cinder api
+
+	yum install openstack-cinder -y
+
+配置cinder数据库连接
+
+	openstack-config --set /etc/cinder/cinder.conf database connection mysql://cinder:openstack@controller0/cinder
+
+
+初始化数据库
+
+	mysql -uroot -popenstack -e  "CREATE DATABASE cinder;""
+	mysql -uroot -popenstack -e  "GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'localhost' IDENTIFIED BY 'openstack';"
+	mysql -uroot -popenstack -e "GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'%' IDENTIFIED BY 'openstack';"
+	mysql -uroot -popenstack -e "GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'controller0' IDENTIFIED BY 'openstack';"
+
+su -s /bin/sh -c "cinder-manage db sync" cinder
+
+在Keystone中创建cinder 系统用户
+
+	keystone user-create --name=cinder --pass=cinder --email=cinder@example.com
+	keystone user-role-add --user=cinder --tenant=service --role=admin
+
+在Keystone注册一个cinder 的 service
+
+	keystone service-create --name=cinder --type=volume --description="OpenStack Block Storage"
+
+创建一个 cinder 的 endpoint
+	keystone endpoint-create \
+	--service-id=$(keystone service-list | awk '/ volume / {print $2}') \
+	--publicurl=http://controller0:8776/v1/%\(tenant_id\)s \
+	--internalurl=http://controller0:8776/v1/%\(tenant_id\)s \
+	--adminurl=http://controller0:8776/v1/%\(tenant_id\)s
+
+在Keystone注册一个cinderv2 的 service
+	keystone service-create --name=cinderv2 --type=volumev2 --description="OpenStack Block Storage v2"
+
+创建一个 cinderv2 的 endpoint
+	keystone endpoint-create \
+	--service-id=$(keystone service-list | awk '/ volumev2 / {print $2}') \
+	--publicurl=http://controller0:8776/v2/%\(tenant_id\)s \
+	--internalurl=http://controller0:8776/v2/%\(tenant_id\)s \
+	--adminurl=http://controller0:8776/v2/%\(tenant_id\)s
+
+配置cinder Keystone认证
+
+	openstack-config --set /etc/cinder/cinder.conf DEFAULT auth_strategy keystone
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken auth_uri http://controller0:5000
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken auth_host controller0
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken auth_protocol http
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken auth_port 35357
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_user cinder
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_tenant_name service
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_password cinder
+
+配置qpid 
+
+	openstack-config --set /etc/cinder/cinder.conf DEFAULT rpc_backend cinder.openstack.common.rpc.impl_qpid
+	openstack-config --set /etc/cinder/cinder.conf DEFAULT qpid_hostname controller0
+
+启动cinder controller 相关服务
+
+	service openstack-cinder-api start
+	service openstack-cinder-scheduler start
+	chkconfig openstack-cinder-api on
+	chkconfig openstack-cinder-scheduler on
+
+###Cinder block storage 节点安装
+
+执行下面的操作之前，当然别忘了需要安装公共部分内容!(比如ntp,hosts 等)
+
+主机名设置
+
+	vi /etc/sysconfig/network
+	HOSTNAME=cinder0
+
+网卡配置
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth0
+	DEVICE=eth0
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=10.20.0.40
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth1
+	DEVICE=eth1
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=172.16.0.40
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth2
+	DEVICE=eth2
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=192.168.4.40
+	NETMASK=255.255.255.0
+
+网络配置文件修改完后重启网络服务
+
+	serice network restart
+
+安装nova 相关包
+
+	yum install -y openstack-cinder scsi-target-utils
+
+创建 LVM physical and logic 卷，作为cinder 块存储的实现
+
+	pvcreate /dev/vdb
+	vgcreate cinder-volumes /dev/vdb
+Add a filter entry to the devices section in the /etc/lvm/lvm.conf file to keep
+LVM from scanning devices used by virtual machines
+
+添加一个过滤器保证 虚拟机能扫描到LVM
+
+vi /etc/lvm/lvm.conf
+	devices {
+	...
+	filter = [ "a/vda1/", "a/vdb/", "r/.*/"]
+	...
+	}
+
+配置Keystone 认证
+
+	openstack-config --set /etc/cinder/cinder.conf DEFAULT auth_strategy keystone
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken auth_uri http://controller0:5000
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken auth_host controller0
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtokenauth_protocol http
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken auth_port 35357
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_user cinder
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_tenant_name service
+	openstack-config --set /etc/cinder/cinder.conf keystone_authtoken admin_password cinder
+
+配置qpid
+
+	openstack-config --set /etc/cinder/cinder.conf DEFAULT rpc_backend cinder.openstack.common.rpc.impl_qpid
+	openstack-config --set /etc/cinder/cinder.conf DEFAULT qpid_hostname controller0
+
+配置数据库连接
+
+	openstack-config --set /etc/cinder/cinder.conf database connection mysql://cinder:openstack@controller0/cinder
+
+配置Glance server
+
+	openstack-config --set /etc/cinder/cinder.conf DEFAULT glance_host controller0
+
+配置  iSCSI target 服务发现 Block Storage volumes
+
+	vi /etc/tgt/targets.conf
+	include /etc/cinder/volumes/*
+
+启动cinder-volume 服务
+
+	service openstack-cinder-volume start
+	service tgtd start
+	chkconfig openstack-cinder-volume on
+	chkconfig tgtd on
+
 其他服务安装步骤，待续...
 
