@@ -1101,7 +1101,7 @@ nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 
 
 或者用openstack-db 工具初始化数据库
 
-	openstack-db --init --service keystone --password openstack
+	openstack-db --init --service cinder --password openstack
 
 在Keystone中创建cinder 系统用户
 
@@ -1159,6 +1159,10 @@ nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 
 
 执行下面的操作之前，当然别忘了需要安装公共部分内容!(比如ntp,hosts 等)
 
+开始配置之前，Cinder0 创建一个新磁盘，用于block 的分配
+
+	/dev/sdb
+
 主机名设置
 
 	vi /etc/sysconfig/network
@@ -1203,8 +1207,8 @@ nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 
 
 创建 LVM physical and logic 卷，作为cinder 块存储的实现
 
-	pvcreate /dev/vdb
-	vgcreate cinder-volumes /dev/vdb
+	pvcreate /dev/sdb
+	vgcreate cinder-volumes /dev/sdb
 
 Add a filter entry to the devices section in the /etc/lvm/lvm.conf file to keep LVM from scanning devices used by virtual machines
 
@@ -1213,7 +1217,7 @@ Add a filter entry to the devices section in the /etc/lvm/lvm.conf file to keep 
 vi /etc/lvm/lvm.conf
 	devices {
 	...
-	filter = [ "a/vda1/", "a/vdb/", "r/.*/"]
+	filter = [ "a/sda1/", "a/sdb/", "r/.*/"]
 	...
 	}
 
