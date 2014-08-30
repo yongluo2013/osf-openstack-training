@@ -1148,10 +1148,6 @@ nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 
 	openstack-config --set /etc/cinder/cinder.conf DEFAULT rpc_backend cinder.openstack.common.rpc.impl_qpid
 	openstack-config --set /etc/cinder/cinder.conf DEFAULT qpid_hostname controller0
 
-配置cinder-volume 的 my_ip , 这个ip决定了存储数据跑在哪网卡上
-
-	openstack-config --set /etc/cinder/cinder.conf DEFAULT my_ip 192.168.4.40
-
 启动cinder controller 相关服务
 
 	service openstack-cinder-api start
@@ -1218,7 +1214,8 @@ Add a filter entry to the devices section in the /etc/lvm/lvm.conf file to keep 
 
 添加一个过滤器保证 虚拟机能扫描到LVM
 
-vi /etc/lvm/lvm.conf
+	vi /etc/lvm/lvm.conf
+
 	devices {
 	...
 	filter = [ "a/sda1/", "a/sdb/", "r/.*/"]
@@ -1248,6 +1245,10 @@ vi /etc/lvm/lvm.conf
 配置Glance server
 
 	openstack-config --set /etc/cinder/cinder.conf DEFAULT glance_host controller0
+
+配置cinder-volume 的 my_ip , 这个ip决定了存储数据跑在哪网卡上
+
+	openstack-config --set /etc/cinder/cinder.conf DEFAULT my_ip 192.168.4.40
 
 配置  iSCSI target 服务发现 Block Storage volumes
 
