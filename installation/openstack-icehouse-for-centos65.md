@@ -1042,7 +1042,6 @@ keystone 注册endpoint
 nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 }') --nic net-id=$(neutron net-list|awk '/ demo-net / { print $2 }') --security-group default demo-instance1
 
 
-
 ##Dashboard 安装
 
 安装Dashboard 相关包
@@ -1201,7 +1200,12 @@ nova boot --flavor m1.tiny --image $(nova image-list|awk '/ CirrOS / { print $2 
 
 	serice network restart
 
-安装nova 相关包
+
+##网络拓扑
+
+![include-cinder](/installation/images/include-cinder.png)
+
+安装Cinder 相关包
 
 	yum install -y openstack-cinder scsi-target-utils
 
@@ -1262,5 +1266,253 @@ Add a filter entry to the devices section in the /etc/lvm/lvm.conf file to keep 
 	chkconfig openstack-cinder-volume on
 	chkconfig tgtd on
 
-其他服务安装步骤，待续...
+##Swift 安装
+
+###安装存储节点
+
+在执行下面的操作之前，当然别忘了需要安装公共部分内容哦!(比如ntp,hosts 等)
+
+在开始配置之前，为Swift0 创建一个新磁盘，用于Swift 数据的存储，比如：
+
+	/dev/sdb
+
+磁盘创建好后，启动OS为新磁盘分区
+
+	fdisk /dev/sdb
+	mkfs.xfs /dev/sdb1
+	echo "/dev/sdb1 /srv/node/sdb1 xfs noatime,nodiratime,nobarrier,logbufs=8 0 0" >> /etc/fstab
+	mkdir -p /srv/node/sdb1
+	mount /srv/node/sdb1
+	chown -R swift:swift /srv/node
+
+
+主机名设置
+
+	vi /etc/sysconfig/network
+	HOSTNAME=swift0
+
+网卡配置
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth0
+	DEVICE=eth0
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=10.20.0.50
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth1
+	DEVICE=eth1
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=172.16.0.50
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth2
+	DEVICE=eth2
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=192.168.4.50
+	NETMASK=255.255.255.0
+
+网络配置文件修改完后重启网络服务
+
+	serice network restart
+
+![include-swift](/installation/images/include-swift.png)
+
+安装swift storage 节点相关的包
+
+yum install -y openstack-swift-account openstack-swift-container openstack-swift-object xfsprogs xinetd
+
+配置object，container ，account 的配置文件
+
+	openstack-config --set /etc/swift/account-server.conf DEFAULT bind_ip 10.20.0.50
+	openstack-config --set /etc/swift/container-server.conf DEFAULT bind_ip 10.20.0.50
+	openstack-config --set /etc/swift/object-server.conf DEFAULT bind_ip 10.20.0.50
+
+
+在rsynd 配置文件中配置要同步的文件目录
+
+	vi /etc/rsyncd.conf
+
+	uid = swift
+	gid = swift
+	log file = /var/log/rsyncd.log
+	pid file = /var/run/rsyncd.pid
+	address = 192.168.4.50
+
+	[account]
+	max connections = 2
+	path = /srv/node/
+	read only = false
+	lock file = /var/lock/account.lock
+
+	[container]
+	max connections = 2
+	path = /srv/node/
+	read only = false
+	lock file = /var/lock/container.lock
+
+	[object]
+	max connections = 2
+	path = /srv/node/
+	read only = false
+	lock file = /var/lock/object.lock
+
+
+	vi /etc/xinetd.d/rsync
+	disable = no
+
+	service xinetd start
+	chkconfig xinetd on
+
+Create the swift recon cache directory and set its permissions:
+
+	mkdir -p /var/swift/recon
+	chown -R swift:swift /var/swift/recon
+
+###安装swift-proxy 服务
+
+为swift 在Keystone 中创建一个用户
+
+	keystone user-create --name=swift --pass=swift --email=swift@example.com
+
+为swift 用户添加root 用户
+
+	keystone user-role-add --user=swift --tenant=service --role=admin
+
+为swift 添加一个对象存储服务	
+
+	keystone service-create --name=swift --type=object-store --description="OpenStack Object Storage"
+
+为swift 添加endpoint
+
+	keystone endpoint-create \
+	--service-id=$(keystone service-list | awk '/ object-store / {print $2}') \
+	--publicurl='http://controller0:8080/v1/AUTH_%(tenant_id)s' \
+	--internalurl='http://controller0:8080/v1/AUTH_%(tenant_id)s' \
+	--adminurl=http://controller0:8080
+
+安装swift-proxy 相关软件包
+
+	yum install -y openstack-swift-proxy memcached python-swiftclient python-keystone-auth-token
+
+添加配置文件，完成配置后再copy 该文件到每个storage 节点
+
+	openstack-config --set /etc/swift/swift.conf swift-hash swift_hash_path_prefix xrfuniounenqjnw
+	openstack-config --set /etc/swift/swift.conf swift-hash swift_hash_path_suffix fLIbertYgibbitZ
+
+	scp /etc/swift/swift.conf root@10.20.0.50:/etc/swift/
+
+修改memcached 默认监听ip地址
+
+	vi /etc/sysconfig/memcached
+	OPTIONS="-l 10.20.0.10"
+
+启动mencached
+
+	service memcached restart
+	chkconfig memcached on
+
+修改过proxy server配置
+
+	vi /etc/swift/proxy-server.conf
+
+	openstack-config --set /etc/swift/proxy-server.conf filter:keystone operator_roles Member,admin,swiftoperator
+
+	openstack-config --set /etc/swift/proxy-server.conf filter:authtoken auth_host controller0
+	openstack-config --set /etc/swift/proxy-server.conf filter:authtoken auth_port 35357 
+	openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_user swift
+	openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_tenant_name service
+	openstack-config --set /etc/swift/proxy-server.conf filter:authtoken admin_password swift
+	openstack-config --set /etc/swift/proxy-server.conf filter:authtoken delay_auth_decision true
+
+构建ring 文件
+
+	cd /etc/swift
+	swift-ring-builder account.builder create 18 3 1
+	swift-ring-builder container.builder create 18 3 1
+	swift-ring-builder object.builder create 18 3 1
+
+	swift-ring-builder account.builder add z1-10.20.0.50:6002R10.20.0.50:6005/sdb1 100
+	swift-ring-builder container.builder add z1-10.20.0.50:6001R10.20.0.50:6004/sdb1 100
+	swift-ring-builder object.builder add z1-10.20.0.50:6000R10.20.0.50:6003/sdb1 100
+
+	swift-ring-builder account.builder
+	swift-ring-builder container.builder
+	swift-ring-builder object.builder
+
+	swift-ring-builder account.builder rebalance
+	swift-ring-builder container.builder rebalance
+	swift-ring-builder object.builder rebalance
+
+拷贝ring 文件到storage 节点
+
+	scp *-riing.gz root@10.20.0.50:/etc/swift/
+
+修改proxy server 和storage 节点Swift 配置文件的权限
+
+	ssh root@10.20.0.50 "chown -R swift:swift /etc/swift"
+	chown -R swift:swift /etc/swift
+
+在controller0 上启动proxy service
+
+	service openstack-swift-proxy start
+	chkconfig openstack-swift-proxy on
+
+在Swift0 上 启动storage 服务
+
+	service openstack-swift-object start
+	service openstack-swift-object-replicator start
+	service openstack-swift-object-updater start 
+	service openstack-swift-object-auditor start
+
+	service openstack-swift-container start
+	service openstack-swift-container-replicator start
+	service openstack-swift-container-updater start
+	service openstack-swift-container-auditor start
+
+	service openstack-swift-account start
+	service openstack-swift-account-replicator start
+	service openstack-swift-account-reaper start
+	service openstack-swift-account-auditor start
+
+设置开机启动
+
+	chkconfig openstack-swift-object on
+	chkconfig openstack-swift-object-replicator on
+	chkconfig openstack-swift-object-updater on 
+	chkconfig openstack-swift-object-auditor on
+
+	chkconfig openstack-swift-container on
+	chkconfig openstack-swift-container-replicator on
+	chkconfig openstack-swift-container-updater on
+	chkconfig openstack-swift-container-auditor on
+
+	chkconfig openstack-swift-account on
+	chkconfig openstack-swift-account-replicator on
+	chkconfig openstack-swift-account-reaper on
+	chkconfig openstack-swift-account-auditor on
+
+
+在controller 节点验证 Swift 安装
+
+	swift stat
+
+上传两个文件测试
+
+	swift upload myfiles test.txt
+	swift upload myfiles test2.txt
+
+下载刚上传的文件
+
+	swift download myfiles
+
+到此，OpenStack 核心组件所有节点安装完毕！
 

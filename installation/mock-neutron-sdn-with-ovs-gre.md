@@ -325,9 +325,6 @@
 
 ##通过 Network Namespace 和Iptables 实现L3 router
 
-添加一个新的bridge br-ex用于floating IP映射
-
-	ovs-vsctl add-br br-ex
 
 重新配置eth1 和 br-ex
 
