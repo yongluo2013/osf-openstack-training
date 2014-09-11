@@ -1324,6 +1324,10 @@ Add a filter entry to the devices section in the /etc/lvm/lvm.conf file to keep 
 
 	serice network restart
 
+##网络拓扑
+
+这里省去Cinder 节点部分
+
 ![include-swift](/installation/images/include-swift.png)
 
 安装swift storage 节点相关的包
