@@ -653,6 +653,9 @@ keystone 注册endpoint
 	openstack-config --set /etc/nova/nova.conf DEFAULT firewall_driver nova.virt.firewall.NoopFirewallDriver
 	openstack-config --set /etc/nova/nova.conf DEFAULT security_group_api neutron
 
+	openstack-config --set /etc/nova/nova.conf DEFAULT service_neutron_metadata_proxy true
+	openstack-config --set /etc/nova/nova.conf DEFAULT neutron_metadata_proxy_shared_secret METADATA_SECRET
+
 重启nova controller 上的服务
 
 	service openstack-nova-api restart
@@ -799,9 +802,11 @@ keystone 注册endpoint
 	BOOTPROTO=none
 
 重启网络服务
+
 	service network restart
 
 为br-ext 添加ip
+
 	ip link set br-ex up
 	sudo ip addr add 172.16.0.20/24 dev br-ex
 
@@ -882,7 +887,7 @@ keystone 注册endpoint
 	openstack-config --set /etc/nova/nova.conf DEFAULT my_ip 10.20.0.30
 	openstack-config --set /etc/nova/nova.conf DEFAULT vnc_enabled True
 	openstack-config --set /etc/nova/nova.conf DEFAULT vncserver_listen 0.0.0.0
-	openstack-config --set /etc/nova/nova.conf DEFAULT vncserver_proxyclient_address 10.20.0.10
+	openstack-config --set /etc/nova/nova.conf DEFAULT vncserver_proxyclient_address 10.20.0.30
 	openstack-config --set /etc/nova/nova.conf DEFAULT novncproxy_base_url http://controller0:6080/vnc_auto.html
 	openstack-config --set /etc/nova/nova.conf libvirt virt_type qemu
 
@@ -1458,7 +1463,7 @@ Create the swift recon cache directory and set its permissions:
 
 拷贝ring 文件到storage 节点
 
-	scp *-riing.gz root@10.20.0.50:/etc/swift/
+	scp *ring.gz root@10.20.0.50:/etc/swift/
 
 修改proxy server 和storage 节点Swift 配置文件的权限
 
@@ -1518,5 +1523,123 @@ Create the swift recon cache directory and set its permissions:
 
 	swift download myfiles
 
+
+##扩展一个新的swift storage 节点
+
+
+在开始配置之前，为Swift0 创建一个新磁盘，用于Swift 数据的存储，比如：
+
+	/dev/sdb
+
+磁盘创建好后，启动OS为新磁盘分区
+
+	fdisk /dev/sdb
+	mkfs.xfs /dev/sdb1
+	echo "/dev/sdb1 /srv/node/sdb1 xfs noatime,nodiratime,nobarrier,logbufs=8 0 0" >> /etc/fstab
+	mkdir -p /srv/node/sdb1
+	mount /srv/node/sdb1
+	chown -R swift:swift /srv/node
+
+
+主机名设置
+
+	vi /etc/sysconfig/network
+	HOSTNAME=swift1
+
+网卡配置
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth0
+	DEVICE=eth0
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=10.20.0.51
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth1
+	DEVICE=eth1
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=172.16.0.51
+	NETMASK=255.255.255.0
+
+	vi /etc/sysconfig/network-scripts/ifcfg-eth2
+	DEVICE=eth2
+	TYPE=Ethernet
+	ONBOOT=yes
+	NM_CONTROLLED=yes
+	BOOTPROTO=static
+	IPADDR=192.168.4.51
+	NETMASK=255.255.255.0
+
+网络配置文件修改完后重启网络服务
+
+	serice network restart
+
+yum install -y openstack-swift-account openstack-swift-container openstack-swift-object xfsprogs xinetd
+
+配置object，container ，account 的配置文件
+
+	openstack-config --set /etc/swift/account-server.conf DEFAULT bind_ip 10.20.0.51
+	openstack-config --set /etc/swift/container-server.conf DEFAULT bind_ip 10.20.0.51
+	openstack-config --set /etc/swift/object-server.conf DEFAULT bind_ip 10.20.0.51
+
+
+在rsynd 配置文件中配置要同步的文件目录
+
+	vi /etc/rsyncd.conf
+
+	uid = swift
+	gid = swift
+	log file = /var/log/rsyncd.log
+	pid file = /var/run/rsyncd.pid
+	address = 192.168.4.51
+
+	[account]
+	max connections = 2
+	path = /srv/node/
+	read only = false
+	lock file = /var/lock/account.lock
+
+	[container]
+	max connections = 2
+	path = /srv/node/
+	read only = false
+	lock file = /var/lock/container.lock
+
+	[object]
+	max connections = 2
+	path = /srv/node/
+	read only = false
+	lock file = /var/lock/object.lock
+
+
+	vi /etc/xinetd.d/rsync
+	disable = no
+
+	service xinetd start
+	chkconfig xinetd on
+
+Create the swift recon cache directory and set its permissions:
+
+	mkdir -p /var/swift/recon
+	chown -R swift:swift /var/swift/recon
+
+重新平衡存储
+
+	swift-ring-builder account.builder add z1-10.20.0.51:6002R10.20.0.51:6005/sdb1 100
+	swift-ring-builder container.builder add z1-10.20.0.51:6001R10.20.0.51:6004/sdb1 100
+	swift-ring-builder object.builder add z1-10.20.0.51:6000R10.20.0.51:6003/sdb1 100
+
+	swift-ring-builder account.builder
+	swift-ring-builder container.builder
+	swift-ring-builder object.builder
+
+	swift-ring-builder account.builder rebalance
+	swift-ring-builder container.builder rebalance
+	swift-ring-builder object.builder rebalance
 到此，OpenStack 核心组件所有节点安装完毕！
 
