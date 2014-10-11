@@ -157,13 +157,13 @@
 	mv cirros-0.3.0-x86_64-disk.img instance1.img
 	virsh define instance1.xml
 	virsh start instance1
-	virsh vncdesplay instance1
+	virsh vncdisplay instance1
 	vncviewer :0
 
 启动console 以后,登录添加ip 地址 192.168.1.11
 
 	ip addr add 192.168.1.11/24 dev eth0
-	route add default gw 192.168.2.1
+	route add default gw 192.168.1.1
 
 
 创建一个内部bridge br-int， 模拟 OpenStack integrated bridge
@@ -325,10 +325,11 @@
 
 ##通过 Network Namespace 和Iptables 实现L3 router
 
+ovs-vsctl add-br br-ex
 
 重新配置eth1 和 br-ex
 
-	cat /etc/sysconfig/network-scripts/ifcfg-eth1
+	vi /etc/sysconfig/network-scripts/ifcfg-eth1
 
 	DEVICE=eth1
 	ONBOOT=yes
@@ -336,7 +337,7 @@
 	PROMISC=yes
 	MTU=1546
 
-	cat /etc/sysconfig/network-scripts/ifcfg-br-ex
+	vi /etc/sysconfig/network-scripts/ifcfg-br-ex
 
 	DEVICE=br-ex
 	TYPE=Bridge
