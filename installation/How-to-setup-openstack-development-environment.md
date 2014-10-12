@@ -104,7 +104,7 @@ vi etc/tempest.conf
 
 Eclipse 配置端配置
 
-1. 添加 /opt/eclipse/plugins/org.python.pydev_3.8.0.201409251235/pysrc 被调试项目Python pach 中
+1. 添加 /opt/eclipse/plugins/org.python.pydev_3.8.0.201409251235/pysrc 被调试项目Python pach 中（可选）
 
 2. 运行pydev debug 
 
@@ -120,6 +120,10 @@ Eclipse 配置端配置
 	import pysrc.pydevd as pydevd;pydevd.settrace('10.20.0.210',stdoutToServer=True, stderrToServer=True)
 
 5.单步调试
+
+参考文档
+
+	http://pydev.org/manual_adv_remote_debugger.html
 
 
 
