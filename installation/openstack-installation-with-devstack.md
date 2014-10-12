@@ -65,7 +65,7 @@ devstack 的安装不能直接用root 用户，新建一个用户stack
 	mkdir ~/.pip
 	cat > ~/.pip/pip.conf <<EOF
 	[global]
-	index-url = https://pypi.douban.com/simple/
+	index-url = http://pypi.douban.com/simple/
 	EOF
 
 

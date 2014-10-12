@@ -42,11 +42,14 @@
 	https://wiki.openstack.org/wiki/Setup_keystone_in_Eclipse
 	http://pydev.org/manual_adv_remote_debugger.html
 
+
 ### 运行单元测试
 
-安装 openstack 开发环境依赖包
+首先安装 openstack 开发环境依赖包
 
 	sudo yum install python-devel openssl-devel python-pip git gcc libxslt-devel mysql-devel postgresql-devel libffi-devel libvirt-devel graphviz sqlite-devel
+
+用pip 安装tox工具
 
 	sudo pip install tox
 
@@ -63,172 +66,80 @@
 
 	tox -e pep8
 
-一起运行，用逗号隔开
+如果需要多环境一起运行，用逗号隔开
 
 	tox -e py26,pep8
 
-
-运行测试套件
+运行特定的测试套件
 
 	tox -e py26 nova.tests.scheduler
 
-pip 方式安装 Python  package
-
-
 ###运行集成测试
 
-devstack 安装openstack
+集成测试，主要是针对 OpenStack 各个API的黑盒测试，通常用于功能测试，同时也是CI 的基本保护网之一，在新的代码变化merge 到master之前每个有效的case必须都是pass。
+
+前提，必须先用devstack 安装好openstack，相应服务启动正常。
+
+检查tempest 配置文件
+
+su - stack
+cd /opt/stack/tempest
+vi etc/tempest.conf
+
+安装devstack 的时候已经自动配置好tempest 配置文件
 
 
-devstack 的安装不能直接用root 用户，新建一个用户stack
+运行单独一个测试用例
 
-	adduser -m stack
-	su - stack
-	git clone  https://github.com/openstack-dev/devstack.git
-
-如果需要设置代理，请添加proxy
-
-	export http_proxy=http://www-proxy.exu.ericsson.se:8080
-	export https_proxy=http://www-proxy.exu.ericsson.se:8080
-
-排除不需要代理的IP地址
-
-	export no_proxy="127.0.0.1,192.168.1.205"
+	./run_tempest.sh -N tempest.api.compute.servers.test_servers_negative.ServersNegativeTestJSON.test_reboot_non_existent_server
 
 
-为了加速下载设置国内的pip 源，这里设置豆瓣的源
+运行一个包下的case
 
-	mkdir ~/.pip
-	cat > ~/.pip/pip.conf <<EOF
-	[global]
-	index-url = https://pypi.douban.com/simple/
-	EOF
-
-还要为pypi.douban.com 添加ip 映射 125.78.248.73 
-
-	vi  /etc/hosts
-	125.78.248.73 pypi.python.org
-
-根据环境修改devstack 安装配置文件（安装大概需要一个小时）
-
-	vi local.conf
-
-	[[local|localrc]]
-	HOST_IP=192.168.1.205
-	LOGDAYS=1
-	LOGFILE=$DEST/logs/stack.sh.log
-	SCREEN_LOGDIR=$DEST/logs/screen
-	ADMIN_PASSWORD=quiet
-	DATABASE_PASSWORD=$ADMIN_PASSWORD
-	RABBIT_PASSWORD=$ADMIN_PASSWORD
-	SERVICE_PASSWORD=$ADMIN_PASSWORD
-	SERVICE_TOKEN=$ADMIN_PASSWORD
-	GIT_BASE=https://github.com
-	DIB_BRANCH=stable/icehouse
-
-
-可能存在的问题
-
-
-[[local|localrc]]
-
-HOST_IP=192.168.1.205
-GIT_BASE=https://github.com
-
-# Logging
-LOGFILE=$DEST/logs/stack.sh.log
-VERBOSE=True
-LOG_COLOR=False
-SCREEN_LOGDIR=$DEST/logs/screen
-
-# Credentials
-ADMIN_PASSWORD=quiet
-DATABASE_PASSWORD=$ADMIN_PASSWORD
-RABBIT_PASSWORD=$ADMIN_PASSWORD
-SERVICE_PASSWORD=$ADMIN_PASSWORD
-SERVICE_TOKEN=$ADMIN_PASSWORD
-
-# Github's Branch
-GLANCE_BRANCH=stable/icehouse
-HORIZON_BRANCH=stable/icehouse
-KEYSTONE_BRANCH=stable/icehouse
-NOVA_BRANCH=stable/icehouse
-NEUTRON_BRANCH=stable/icehouse
-HEAT_BRANCH=stable/icehouse
-CEILOMETER_BRANCH=stable/icehouse
-
-# Neutron - Networking Service
-DISABLED_SERVICES=n-net
-ENABLED_SERVICES+=,q-svc,q-agt,q-dhcp,q-l3,q-meta,q-metering,neutron
-
-# Neutron - Load Balancing
-ENABLED_SERVICES+=,q-lbaas
-
-# Heat - Orchestration Service
-ENABLED_SERVICES+=,heat,h-api,h-api-cfn,h-api-cw,h-eng
-HEAT_STANDALONE=True
-
-# Ceilometer - Metering Service (metering + alarming)
-ENABLED_SERVICES+=,ceilometer-acompute,ceilometer-acentral,ceilometer-collector,ceilometer-api
-ENABLED_SERVICES+=,ceilometer-alarm-notify,ceilometer-alarm-eval
+ 	./run_tempest.sh -N -- tempest.api.compute.flavors
 
 
 
-或者
+###Keystone 远程调试
+
+Eclipse 配置端配置
+
+1. 添加 /opt/eclipse/plugins/org.python.pydev_3.8.0.201409251235/pysrc 被调试项目Python pach 中
+
+2. 运行pydev debug 
 
 
-[[local|localrc]]
+远程Keystone 服务器配置
 
-HOST_IP=10.20.0.210
-GIT_BASE=https://github.com
+3. 拷贝Eclipse Dydev 插件下 pysrc 目录到 Keystone 机器上，并添加该目录到Python pach
 
-# Logging
-LOGFILE=$DEST/logs/stack.sh.log
-VERBOSE=True
-LOG_COLOR=False
-SCREEN_LOGDIR=$DEST/logs/screen
+	export PYTHONPATH=$PYTHONPATH:/opt/eclipse/plugins/org.python.pydev_3.8.0.201409251235/pysrc
 
-# Credentials
-ADMIN_PASSWORD=quiet
-DATABASE_PASSWORD=$ADMIN_PASSWORD
-RABBIT_PASSWORD=$ADMIN_PASSWORD
-SERVICE_PASSWORD=$ADMIN_PASSWORD
-SERVICE_TOKEN=$ADMIN_PASSWORD
+4. 在需要打断点的地方添加如下代码
 
-# Github's Branch
-GLANCE_BRANCH=stable/icehouse
-HORIZON_BRANCH=stable/icehouse
-KEYSTONE_BRANCH=stable/icehouse
-NOVA_BRANCH=stable/icehouse
-NEUTRON_BRANCH=stable/icehouse
-HEAT_BRANCH=stable/icehouse
-CEILOMETER_BRANCH=stable/icehouse
+	import pysrc.pydevd as pydevd;pydevd.settrace('10.20.0.210',stdoutToServer=True, stderrToServer=True)
 
-DISABLED_SERVICES=n-net,heat,swift,ceilometer
-ENABLED_SERVICES+=,q-svc,q-agt,q-dhcp,q-l3,q-meta,q-metering,neutron
-# Neutron - Load Balancing
-ENABLED_SERVICES+=,q-lbaas
+5.单步调试
 
 
 
-遇到的问题
-
-1.git clone 失败问题
 
 
-2.安装过程中检查q-dhcp 服务没有启动，查看/var/log/neutron/dhcp-agent.log，确认是否有以下错误出现：
 
-2013-11-15 17:18:07.785 9808 WARNING neutron.agent.linux.dhcp [-] FAILED VERSION REQUIREMENT FOR DNSMASQ. DHCP AGENT MAY NOT RUN CORRECTLY! Please ensure that its version is 2.59 or above!
-RuntimeError:
-2013-11-15 18:02:39.974 9808 TRACE neutron.agent.dhcp_agent Command: ['sudo', 'neutron-rootwrap', '/etc/neutron/rootwrap.conf', 'ip', 'netns', 'add', 'qdhcp-85c85884-3d8f-4f2a-8f81-97f1aa686837']
-2013-11-15 18:02:39.974 9808 TRACE neutron.agent.dhcp_agent Exit code: 255
-2013-11-15 18:02:39.974 9808 TRACE neutron.agent.dhcp_agent Stdout: ''
-2013-11-15 18:02:39.974 9808 TRACE neutron.agent.dhcp_agent Stderr: 'Bind /proc/self/ns/net -> /var/run/netns/qdhcp-85c85884-3d8f-4f2a-8f81-97f1aa686837 failed: No such file or directory\n'
 
-解决办法：下载并安装新版本的dnsmasq
 
-wget http://pkgs.repoforge.org/dnsmasq/dnsmasq-2.65-1.el6.rfx.x86_64.rpm
-rpm -Uvh dnsmasq-2.65-1.el6.rfx.x86_64.rpm
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
