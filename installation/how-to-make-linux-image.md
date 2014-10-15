@@ -34,7 +34,7 @@
 
 	sudo yum install tigervnc
 
-###可以直接使用默认的“default” 网络，不过为了清楚起见，创建自己的虚拟网络 “my-net”
+可以直接使用默认的“default” 网络，不过为了清楚起见，创建自己的虚拟网络 “my-net”
 	
 	vi my-net.xml
 
@@ -115,16 +115,20 @@
 	service iptables restart
 
 
-安装cloud-ini 工具包
+###安装cloud-ini 工具包
 
-
+略
 
 ###默认启动SSH服务
 
+略
 
 ###开机自动resize 跟分区
 
+略
 
 ###设置用SSH 秘钥对访问实例
+
+略
 
 
