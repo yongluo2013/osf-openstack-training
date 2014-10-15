@@ -7,8 +7,11 @@
 
 ##基本概念
 
+略
+
 ##基本制作步骤
 
+* VM's OS installation
 * No hard-coded MAC address information
 * SSH server running
 * Disable firewall
