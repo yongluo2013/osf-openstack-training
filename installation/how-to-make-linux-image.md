@@ -34,7 +34,7 @@
 
 	sudo yum install tigervnc
 
-###可以直接使用默认的“default” 网络，不过为了清除起见，创建自己的虚拟网络 “my-net”
+###可以直接使用默认的“default” 网络，不过为了清楚起见，创建自己的虚拟网络 “my-net”
 	
 	vi my-net.xml
 
@@ -66,7 +66,7 @@
 ####创建虚拟机
 
 	virt-install --name rhel-test --hvm  --ram 2048  --vcpus 2  --disk path=/var/tmp/rhel-test.img,size=10,bus=virtio,format=qcow2 --network network:my-net --accelerate --vnc --vncport=5908  --cdrom /var/tmp/CentOS-6.5-x86_64-bin-DVD1.iso  --boot cdrom
-CentOS-6.5-x86_64-bin-DVD1.iso
+
 
 查看创建的vm，在libvirt 中被称作domain
 
