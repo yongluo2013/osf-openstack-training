@@ -258,3 +258,30 @@ icehouse完全安装，网络用nova-network
 	ENABLED_SERVICES+=,q-svc,q-agt,q-dhcp,q-l3,q-meta,q-metering,neutron
 	# Neutron - Load Balancing
 	ENABLED_SERVICES+=,q-lbaas
+
+
+### 启用Rabbitmq rabbitmq_management web 服务
+
+执行如下命令启用rabbitmq web management 服务
+
+	/usr/lib/rabbitmq/bin/rabbitmq-plugins enable rabbitmq_management
+
+让后重启 rabbitmq
+
+	service rabbitmq-server restart
+
+访问页面管理界面
+
+	http://10.20.0.210:15672
+
+登录管理界面,查看rabbitmq 的队列使用情况
+
+	guest/openstack
+
+另外也可以用命令行方式查看
+
+	rabbitmqctl list_queues
+
+
+
+

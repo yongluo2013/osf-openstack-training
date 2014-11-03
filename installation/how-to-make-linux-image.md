@@ -33,9 +33,9 @@
 
 	/etc/init.d/libvirtd status
 
-安装tigervnc，用于vnc 两件vm console
+安装tigervnc 和 xauth，用于vnc 显示vm console
 
-	sudo yum install tigervnc
+	sudo yum install tigervnc xauth -y
 
 可以直接使用默认的“default” 网络，不过为了清楚起见，创建自己的虚拟网络 “my-net”
 	

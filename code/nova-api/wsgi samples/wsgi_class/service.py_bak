@@ -1,0 +1,64 @@
+import wsgi
+import eventlet
+import greenlet
+
+class Launcher(object):
+    def __init__(self):
+        self._services = []
+
+    @staticmethod
+    def run_server(server):
+        server.start()
+        server.wait()
+
+    def launch_server(self, server):
+        gt =  eventlet.spawn(self.run_server, server)
+        self._services.append(gt)
+
+    def stop(self):
+        for service in self._services:
+            service.kill()
+
+    def wait(self):
+        for service in self._services:
+            try:
+                service.wait()
+            except greenlet.GreenletExit:
+                pass
+
+       
+class WSGIService(object):
+    def __init__(self):
+        self.loader = wsgi.Loader()
+        self.app = self.loader.load_app()
+        self.server = wsgi.Server(self.app,
+                                  '0.0.0.0',
+                                  8080)
+
+    def start(self):
+        self.server.start()
+
+    def wait(self):
+        self.server.wait()
+
+    def stop(self):
+        self.server.stop()
+
+_launcher = None
+
+def serve(server):
+    global _launcher
+    if not _launcher:
+        _launcher = Launcher()
+        _launcher.launch_server(server)
+
+def wait():
+    _launcher.wait()
+
+if __name__ == "__main__":
+    server = WSGIService()
+#    serve(server)
+#    wait()
+    server.start()
+    server.wait()
+   
