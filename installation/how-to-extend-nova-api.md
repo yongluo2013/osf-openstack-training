@@ -13,7 +13,7 @@
 1)  创建一个新的extension 子类. Extension子类应该派生于“nova.api.openstack.extensions:ExtensionDescriptor” ， 以 Floating_ips 类为例。
 
 
-![nova-api-extension](/installation/images/extension.jpg)
+![nova-api-extension](/installation/images/extension.jpg =300*200)
 
 2)    在 Nova API 中 添加一个新的资源类型
 
