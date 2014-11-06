@@ -1,0 +1,8 @@
+WebOb
+wsgiref
+Routes
+greenlet
+PasteDeploy
+Paste
+eventlet
+json
