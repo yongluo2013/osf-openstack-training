@@ -45,7 +45,7 @@
 	  <name>my-net</name>
 	  <uuid>6f801f5d-f9b6-480f-81a7-f177e3555b99</uuid>
 	  <forward mode='nat'/>
-	  <bridge name='virbr0' stp='on' delay='0' />
+	  <bridge name='my_net' stp='on' delay='0' />
 	  <mac address='52:54:00:0F:ED:99'/>
 	  <ip address='192.168.10.1' netmask='255.255.255.0'>
 	    <dhcp>
