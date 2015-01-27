@@ -1,16 +1,19 @@
 ##主机名配置
 
-controller0
+需要在所有节点先配置主机名
 
 	vi /etc/hosts
+
 	10.0.0.10 controller0
-	10.0.0.11 controller1
-
 	10.0.0.20 network0
-	10.0.0.21 network1
-
 	10.0.0.30 compute0
-	10.0.0.31 compute1
+
+并依此修改主机名
+
+	echo "controller0" >  /ect/sysconfig/hostname
+	echo "network0" >  /ect/sysconfig/hostname
+	echo "compute0" >  /ect/sysconfig/hostname
+
 
 ##网络配置
 
@@ -32,7 +35,7 @@ storage network
 
 	10.0.0.2/24
 
-controller0 网络配置如下
+controller0 节点网络配置如下
 
 	vi /etc/sysconfig/network-scripts/ifcfg-eth0 
 	TYPE=Ethernet
@@ -68,7 +71,7 @@ controller0 网络配置如下
 	ONBOOT=yes
 
 
-network0 网络配置如下
+network0 节点网络配置如下
 
 	vi /etc/sysconfig/network-scripts/ifcfg-eth0 
 	TYPE=Ethernet
@@ -103,7 +106,7 @@ network0 网络配置如下
 	NETMASK=255.255.255.0
 	ONBOOT=yes
 
-compute0 网络配置如下
+compute0 节点网络配置如下
 
 	vi /etc/sysconfig/network-scripts/ifcfg-eth0 
 	TYPE=Ethernet
@@ -141,9 +144,10 @@ compute0 网络配置如下
 
 ## 基本配置
 
-如果是centos
-http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
-yum install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm
+如果是centos7 需要先配置epel 和rdo repo ，Fedora 20 不需要了
+
+	yum install http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+	yum install http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm
 
 禁用默认防火墙
 
@@ -165,8 +169,6 @@ vi /etc/ntp.conf
 
 	systemctl enable ntpd.service
 	systemctl start ntpd.service
-
-vi /etc/ntp.conf
 
 
 ##控制节点配置
