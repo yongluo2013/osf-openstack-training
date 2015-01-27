@@ -101,7 +101,7 @@ network0 网络配置如下
 	BOOTPROTO=static
 	IPADDR=10.0.3.20
 	NETMASK=255.255.255.0
-	ONBOOT=no
+	ONBOOT=yes
 
 compute0 网络配置如下
 
@@ -136,7 +136,7 @@ compute0 网络配置如下
 	BOOTPROTO=static
 	IPADDR=10.0.3.30
 	NETMASK=255.255.255.0
-	ONBOOT=no
+	ONBOOT=yes
 
 
 ## 基本配置
