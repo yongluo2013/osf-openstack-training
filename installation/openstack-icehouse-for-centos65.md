@@ -103,7 +103,7 @@ ISO文件下载：http://mirrors.163.com/centos/6.5/isos/x86_64/CentOS-6.5-x86_6
 
 EPEL源: http://dl.fedoraproject.org/pub/epel/6/x86_64/
 
-RDO源:  http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/
+RDO源:  https://repos.fedorapeople.org/repos/openstack/EOL/openstack-icehouse/
 
 自动配置执行如此命令即可，源安装完成后更新所有RPM包，由于升级了kernel 需要重新启动操作系统。
 
